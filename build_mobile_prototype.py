@@ -375,7 +375,7 @@ cmd("node.create", {"type": "text", "parent": av3["id"], "text": "АС", "props"
 u_txt = cmd("frame.create", {"parent": u_info["id"], "width": 190, "height": 34, "props": {"fills": [], "layout": "vertical", "mainAlign": "center"}})
 make_text(u_txt["id"], "Алексей Смирнов", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
 make_text(u_txt["id"], "Ведущий юрист • ТехноСнаб", font_size=11, fill=tokens["light/text-sec"])
-make_badge(uh["id"], "3 алерты", "critical", size="compact")
+make_badge(uh["id"], "3 критических риска", "critical", size="compact")
 
 # Dashboard Content Body (h=684)
 b3 = cmd("frame.create", {
@@ -425,7 +425,7 @@ make_badge(fpills["id"], "Согласовано", "safe", size="compact")
 
 # Contract Cards List (3 cards)
 contracts = [
-    ("Договор поставки оборудования № 48/2026", "critical", "Высокий (3)", "ООО «ПромСтанкоКомплект» • СПАРК 74", "Кабальная неустойка 5%/день (2.42 млн ₽) • Коллизия п. 3.2 vs 6.4", "4.85 млн ₽"),
+    ("Договор поставки оборудования № 48/2026", "critical", "Высокий (3)", "ООО «ПромСтанкоКомплект» • СПАРК 74", "Несоразмерная неустойка 5%/день (2.42 млн ₽) • Коллизия п. 3.2 vs 6.4", "4.85 млн ₽"),
     ("Договор аренды помещений № 12-А/2026", "safe", "Безопасно", "ПАО «Бизнес Центр Сити» • СПАРК 92", "Все условия соответствуют Playbook. Замечаний нет.", "850 000 ₽"),
     ("Договор подряда на разработку ПО № П-09", "warning", "Внимание (1)", "ООО «Диджитал Системс» • СПАРК 68", "Невыгодная территориальная подсудность (Арбитраж г. Пермь).", "2.10 млн ₽")
 ]
@@ -542,7 +542,7 @@ c73 = cmd("frame.create", {
 })
 c73_h = cmd("frame.create", {"parent": c73["id"], "width": 310, "height": 18, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
 make_text(c73_h["id"], "П. 7.3 [РИСК 333 ГК]", font_size=10, font_style="Bold", fill=tokens["light/crit-txt"])
-make_badge(c73_h["id"], "Кабальный", "critical", size="compact")
+make_badge(c73_h["id"], "ст. 333 ГК", "critical", size="compact")
 make_text(c73["id"], "«Неустойка 5% от суммы Договора за каждый день просрочки без ограничения суммы...»", font_size=10, fill=tokens["light/text-main"], width=310)
 make_text(c73["id"], "↳ За 20 дней неустойка превысит всю сумму (2 425 000 ₽)!", font_size=9, font_style="Bold", fill=tokens["light/crit-txt"], width=310)
 
@@ -607,7 +607,7 @@ rb = cmd("frame.create", {
 rb_t = cmd("frame.create", {"parent": rb["id"], "width": 334, "height": 18, "props": {"fills": [], "layout": "horizontal", "gap": 6, "crossAlign": "center"}})
 make_badge(rb_t["id"], "НЕ ПОДПИСЫВАТЬ", "critical", size="compact")
 make_text(rb_t["id"], "Риск штрафа: 2 425 000 ₽", font_size=11, font_style="Bold", fill=tokens["light/crit-txt"])
-make_text(rb["id"], "Выявлена кабальная неустойка 5%/день и разрыв сроков оплаты. Рекомендовано направить протокол разногласий.", font_size=10, fill=tokens["light/text-main"], width=334)
+make_text(rb["id"], "Выявлена чрезмерная неустойка 5%/день (ст. 333 ГК РФ) и разрыв сроков оплаты. Рекомендован протокол разногласий.", font_size=10, fill=tokens["light/text-main"], width=334)
 
 # Redline Diff Card (w=350, h=210)
 rd = cmd("frame.create", {
@@ -618,7 +618,7 @@ rd = cmd("frame.create", {
     }
 })
 rd_h = cmd("frame.create", {"parent": rd["id"], "width": 326, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
-make_text(rd_h["id"], "Кабальная неустойка (п. 7.3)", font_size=12, font_style="Bold", fill=tokens["light/text-main"])
+make_text(rd_h["id"], "Несоразмерная неустойка (п. 7.3)", font_size=12, font_style="Bold", fill=tokens["light/text-main"])
 make_badge(rd_h["id"], "Риск 95/100", "critical", size="compact")
 
 # Original text (red strikethrough)
@@ -649,7 +649,7 @@ make_text(vn_h["id"], "▶ 00:18 / 00:35", font_size=10, font_style="Bold", fill
 # Waveform simulated
 wv = cmd("frame.create", {"parent": vn["id"], "width": 330, "height": 8, "props": {"fill": tokens["light/border"], "cornerRadius": 4}})
 cmd("frame.create", {"parent": wv["id"], "width": 160, "height": 8, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4}})
-make_text(vn["id"], "«Пункт 7.3 кабальный, суды снижают по 333 ГК РФ до 0.1%. Лимит 10% согласован.»", font_size=9, fill=tokens["light/text-sec"], width=330)
+make_text(vn["id"], "«Неустойка по п. 7.3 завышена в 50 раз, суды снижают по ст. 333 ГК РФ до 0.1%. Лимит 10% согласован.»", font_size=9, fill=tokens["light/text-sec"], width=330)
 
 # Judicial Predictor & SPARK Card
 jp = cmd("frame.create", {

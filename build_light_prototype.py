@@ -307,9 +307,9 @@ hero_card = cmd("frame.create", {
     }
 })
 # Hero Pill
-make_badge(hero_card["id"], "✨ ИИ-аналитик юридических документов на базе GigaChat Enterprise и ст. ГК РФ", "primary", size="regular")
+make_badge(hero_card["id"], "✨ ИИ-аналитик договоров на базе GigaChat Enterprise и норм Гражданского кодекса РФ", "primary", size="regular")
 # Hero Headline
-make_text(hero_card["id"], "Интеллектуальный аудит договоров и защита от кабальных условий за 90 секунд", font_size=28, font_style="Bold", fill=tokens["light/text-main"], width=1280)
+make_text(hero_card["id"], "Интеллектуальный аудит договоров и защита от скрытых правовых рисков за 90 секунд", font_size=28, font_style="Bold", fill=tokens["light/text-main"], width=1280)
 # Hero Subtitle
 make_text(hero_card["id"], "Нейросетевой ассистент практикующего юриста и руководителя: автоматически сопоставляет разделы документа, мгновенно находит несоразмерную неустойку, скрытые штрафы и готовит юридически безупречный протокол разногласий.", font_size=14, fill=tokens["light/text-sec"], width=1280)
 
@@ -732,7 +732,7 @@ c73_box = cmd("frame.create", {
     }
 })
 c73_h = cmd("frame.create", {"parent": c73_box["id"], "width": 624, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
-make_text(c73_h["id"], "🚨 Пункт 7.3 [ОБНАРУЖЕН КРИТИЧЕСКИЙ РИСК]:", font_size=11, font_style="Bold", fill=tokens["light/crit-txt"])
+make_text(c73_h["id"], "🚨 Пункт 7.3 [НЕСОРАЗМЕРНАЯ НЕУСТОЙКА ПО СТ. 333 ГК РФ]:", font_size=11, font_style="Bold", fill=tokens["light/crit-txt"])
 make_badge(c73_h["id"], "ст. 333 ГК РФ", "critical", size="compact")
 make_text(c73_box["id"], "«В случае нарушения сроков поставки Поставщик уплачивает неустойку в размере 5% от суммы Договора за каждый день просрочки без ограничения предельной суммы...»", font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=624)
 make_text(c73_box["id"], "⚡ Превышение среднерыночной ставки более чем в 50 раз. За 20 дней сумма штрафа превысит стоимость договора (2 425 000 ₽)!", font_size=10, fill=tokens["light/crit-txt"], width=624)
@@ -780,7 +780,7 @@ i1_card = cmd("frame.create", {
     }
 })
 i1_h = cmd("frame.create", {"parent": i1_card["id"], "width": 574, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
-make_text(i1_h["id"], "🚨 Кабальная неустойка 5% в день без ограничения Cap", font_size=12, font_style="Bold", fill=tokens["light/crit-txt"])
+make_text(i1_h["id"], "🚨 Явно несоразмерная неустойка 5% в день (ст. 333 ГК РФ)", font_size=12, font_style="Bold", fill=tokens["light/crit-txt"])
 make_badge(i1_h["id"], "Критический", "critical", size="compact")
 make_text(i1_card["id"], "Раздел 7 • Пункт 7.3 • Финансовая ответственность Поставщика", font_size=10, font_style="Bold", fill=tokens["light/text-sec"])
 make_text(i1_card["id"], "Ставка 5%/день превышает среднерыночную в 50 раз. Риск взыскания 2 425 000 ₽ при минимальной задержке. Судебный предиктор: вероятность снижения судом 84% по ст. 333 ГК РФ.", font_size=11, fill=tokens["light/text-sec"], width=574)
@@ -891,7 +891,7 @@ ex_banner = cmd("frame.create", {
 cmd("frame.create", {"parent": ex_banner["id"], "width": 4, "height": 50, "props": {"fill": tokens["light/crit-txt"], "cornerRadius": 2}})
 make_badge(ex_banner["id"], "НЕ ПОДПИСЫВАТЬ", "critical", size="regular")
 eb_txt = cmd("frame.create", {"parent": ex_banner["id"], "width": 1150, "height": 46, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
-make_text(eb_txt["id"], "Резюме для руководства: Выявлена кабальная неустойка 5%/день и критическая коллизия сроков оплаты", font_size=13, font_style="Bold", fill=tokens["light/crit-txt"], width=1140)
+make_text(eb_txt["id"], "Резюме для руководства: Выявлена явно несоразмерная неустойка 5%/день (ст. 333 ГК РФ) и коллизия сроков оплаты", font_size=13, font_style="Bold", fill=tokens["light/crit-txt"], width=1140)
 make_text(eb_txt["id"], "Сумма под риском штрафов: 2 425 000 руб. (50% от контракта) • Срок п. 3.2 (5 дней от счета) не совпадает с п. 6.4 (30 дней от Акта). Рекомендация: направить протокол разногласий.", font_size=11, fill=tokens["light/text-sec"], width=1140)
 
 # TWO-COLUMN SPLIT
@@ -961,7 +961,7 @@ v_box = cmd("frame.create", {
 vh = cmd("frame.create", {"parent": v_box["id"], "width": 602, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
 make_text(vh["id"], "🎙 Голосовая заметка: Алексей Смирнов (Ведущий юрист)", font_size=11, font_style="Bold", fill=tokens["brand/primary"])
 make_text(vh["id"], "▶ 0:18 / 0:35 • Распознано ИИ", font_size=10, fill=tokens["light/text-sec"])
-make_text(v_box["id"], "«Обязательно согласовать лимит неустойки 10% с финдиректором и привязать оплату исключительно к Акту приемки, исключив оплату по счету.»", font_size=11, fill=tokens["light/text-main"], width=602)
+make_text(v_box["id"], "«Обязательно согласовать лимит неустойки 10% с финдиректором и привязать оплату исключительно к Акту приёмки, исключив оплату по счёту.»", font_size=11, fill=tokens["light/text-main"], width=602)
 
 
 # RIGHT COLUMN: Risk Inspector + SPARK Diligence + Judicial Risk Predictor
@@ -981,7 +981,7 @@ cp_card = cmd("frame.create", {
 cp_info = cmd("frame.create", {"parent": cp_card["id"], "width": 460, "height": 44, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
 make_text(cp_info["id"], "Контрагент: ООО «ПромМашСервис» (ИНН 7701234567)", font_size=12, font_style="Bold", fill=tokens["light/text-main"])
 make_text(cp_info["id"], "СПАРК: 89/100 • 2 открытых судебных иска в Арбитражном суде г. Москвы на 1.4 млн ₽", font_size=11, fill=tokens["light/text-sec"])
-make_badge(cp_card["id"], "Кадастр: 2 иска", "warning", size="compact")
+make_badge(cp_card["id"], "КАД Арбитр: 2 иска", "warning", size="compact")
 
 # Filter chips for risks
 rf_row = cmd("frame.create", {"parent": c_right["id"], "width": 680, "height": 28, "props": {"fills": [], "layout": "horizontal", "gap": 8}})
@@ -1341,7 +1341,7 @@ make_text(sb_left["id"], "Настройка каналов и частоты у
 notifs = [
     ("Email: alexey.smirnov@technosnab.ru (мгновенно)", True),
     ("Telegram-бот @LexAI_Legal_Bot (при рисках > 80)", True),
-    ("SMS-алерт при судебных коллизиях", False),
+    ("SMS-уведомления при судебных коллизиях", False),
     ("Еженедельный дайджест для руководства (пн, 09:00)", True)
 ]
 for n_name, n_on in notifs:
