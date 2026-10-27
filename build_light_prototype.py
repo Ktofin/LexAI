@@ -1,36 +1,50 @@
 #!/usr/bin/env python3
 """
-LexAI — Flawless Light Theme Website Prototype in Open FigCraft.
-Guarantees:
-- Every single frame has explicit, calculated width and height (never defaults to 100x100).
-- Zero clipped text, zero missing descriptions, zero truncated navbar links or brand titles.
-- Unified 64px header across all screens with § LexAI Legal logo, all 4 nav tabs, user profile and avatar.
-- 5 Distinct Container Archetypes (Top color bars, risk alert stripes, contradiction diffs, AI quote boxes, dropzones).
-- Anthropic Warm Linen (#FAF9F5, #FFFFFF, #E5E3D8, Terracotta #D97757).
+LexAI Legal — Complete Rich Interactive Light Theme Prototype in Open FigCraft.
+Directly implements:
+- Full Story Mapping & Mind Map from user's report (image4.jpeg / Miro)
+- 3 User Personas: Alexey (50% Lawyer), Olga (25% Head of Legal), Dmitry (25% Executive / Procurement)
+- Rich domain workflows:
+  * Guest test mode, Document type selectors, Analysis parameter checkboxes
+  * GigaChat Enterprise + Civil Code logic validator
+  * Entity extraction (Amounts, Dates, Parties, Terms)
+  * Redline Diff view (strike-through original vs green corporate safe replacement)
+  * Judicial Risk Predictor (84% win chance by ст. 333 ГК РФ)
+  * Voice Note player (Alexey's audio note to clause)
+  * SPARK / Kad.Arbitr counterparty diligence card
+  * Executive Summary banner for directors
+  * Corporate Playbook with visual IF/THEN condition builder
+  * System integrations: 1C:Документооборот, Диадок СЭД, СПАРК, Telegram bot
+- Beautiful Anthropic Warm Linen (#FAF9F5, #FFFFFF, #E5E3D8, Terracotta #D97757) aesthetic.
+- Zero text clipping, zero default 100x100 squishes.
 """
 
 import socket
 import json
+import time
 import os
 import sys
 
 PORT = 9897
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_PATH = os.path.join(WORKSPACE_DIR, "Legal_AI_Analyst.figcraft")
 EXPORT_DIR = os.path.join(WORKSPACE_DIR, "renders")
 os.makedirs(EXPORT_DIR, exist_ok=True)
 
 print(f"🔄 Подключение к открытому FigCraft на порту {PORT}...")
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("127.0.0.1", PORT))
-seq = 0
+try:
+    s.connect(("127.0.0.1", PORT))
+except Exception as e:
+    print(f"❌ Ошибка подключения к порту {PORT}: {e}")
+    sys.exit(1)
 
-def cmd(action, params={}):
-    global seq
-    seq += 1
-    req = json.dumps({"id": seq, "method": "engine.execute", "params": {"command": action, "params": params}}) + "\n"
+def cmd(action, params=None):
+    if params is None: params = {}
+    req = json.dumps({"id": 1, "method": "engine.execute", "params": {"command": action, "params": params}}) + "\n"
     s.sendall(req.encode("utf-8"))
     buf = b""
-    s.settimeout(20.0)
+    s.settimeout(15.0)
     while True:
         chunk = s.recv(16384)
         if not chunk: break
@@ -38,41 +52,58 @@ def cmd(action, params={}):
         if b"\n" in buf: break
     res = json.loads(buf.decode("utf-8"))
     if "error" in res and res["error"]:
-        print(f"⚠️ Ошибка в {action}: {res['error']}")
+        print(f"⚠️ Ошибка команды {action}: {res['error']}")
     return res.get("result")
 
-# Design Tokens (Anthropic Warm Linen & Terracotta Palette)
+# Design Tokens (Anthropic Warm Linen & Terracotta)
 tokens = {
-    "brand/primary": "#D97757",
-    "brand/primary-hover": "#C26546",
-    "brand/primary-active": "#AC5437",
+    "brand/primary": "#D97757",       # Anthropic Terracotta
+    "brand/primary-hover": "#C56546",
+    "brand/primary-light": "#FAECE7", # Terracotta soft tint
     
-    "light/bg": "#FAF9F5",
-    "light/card": "#FFFFFF",
-    "light/card-subtle": "#F4F3ED",
-    "light/border": "#E5E3D8",
-    "light/border-strong": "#CCC8BC",
-    "light/text-main": "#141413",
-    "light/text-sec": "#615F59",
-    "light/text-muted": "#8C8A82",
-    "light/brand-tint": "#FDF5F2",
-    "light/brand-bdr": "#F5D0C5",
+    "light/bg": "#FAF9F5",            # Warm Linen Canvas
+    "light/card": "#FFFFFF",          # Pure Card
+    "light/card-tint": "#F5F3ED",     # Secondary Card Tint
+    "light/card-warm": "#FBF7F0",     # Subtle warm zone
+    "light/border": "#E5E3D8",        # Subtle Linen Border
+    "light/border-subtle": "#EFECE6",
+    "light/border-dark": "#D5D2C5",
     
-    "light/crit-bg": "#FDF2F2",
-    "light/crit-bdr": "#F8B4B4",
-    "light/crit-txt": "#C81E1E",
+    "light/text-main": "#141413",     # Obsidian / Near Black
+    "light/text-sec": "#66645E",      # Muted Charcoal
+    "light/text-muted": "#918E85",    # Subtle caption
     
-    "light/contra-bg": "#F5F3FF",
+    "light/crit-bg": "#FEF2F2",       # Critical Red Alert
+    "light/crit-bdr": "#FECACA",
+    "light/crit-txt": "#DC2626",
+    
+    "light/contra-bg": "#F5F3FF",     # Purple Contradiction Alert
     "light/contra-bdr": "#DDD6FE",
-    "light/contra-txt": "#6D28D9",
+    "light/contra-txt": "#7C3AED",
     
-    "light/warn-bg": "#FFFBEB",
+    "light/warn-bg": "#FFFBEB",       # Amber Warning
     "light/warn-bdr": "#FDE68A",
     "light/warn-txt": "#B45309",
     
-    "light/safe-bg": "#F0FDF4",
+    "light/safe-bg": "#F0FDF4",       # Emerald Safe
     "light/safe-bdr": "#BBF7D0",
     "light/safe-txt": "#15803D",
+    
+    "light/blue-bg": "#EFF6FF",       # Blue Information
+    "light/blue-bdr": "#BFDBFE",
+    "light/blue-txt": "#2563EB",
+
+    "light/critical-bg": "#FEF2F2",
+    "light/critical-bdr": "#FECACA",
+    "light/critical-txt": "#DC2626",
+    
+    "light/contradiction-bg": "#F5F3FF",
+    "light/contradiction-bdr": "#DDD6FE",
+    "light/contradiction-txt": "#7C3AED",
+    
+    "light/warning-bg": "#FFFBEB",
+    "light/warning-bdr": "#FDE68A",
+    "light/warning-txt": "#B45309",
 }
 
 # Variable lookup for dynamic binding
@@ -87,7 +118,7 @@ def bind(node_id, field, var_name):
     if var_name in var_ids:
         cmd("variable.bind", {"ids": [node_id], "field": field, "variable": var_ids[var_name]})
 
-# ROBUST TEXT CREATOR WITH WRAPPING SUPPORT
+# TEXT HELPER
 def make_text(parent, text, font_size=12, font_style="Regular", fill=None, width=None, **kwargs):
     props = {
         "fontSize": font_size,
@@ -104,29 +135,27 @@ def make_text(parent, text, font_size=12, font_style="Regular", fill=None, width
     node = cmd("node.create", {"type": "text", "parent": parent, "text": text, "props": props})
     return node["id"] if node else None
 
-# ROBUST BUTTON CREATOR (NEVER CLIPS TEXT)
+# BUTTON HELPER
 def make_btn(parent, text, variant="primary", theme="light", size="md", width=None, state="default", **kwargs):
     t_pre = "light"
     cfg = {
-        "lg": {"h": 48, "font": 16, "px": 24, "py": 12, "r": 8},
-        "md": {"h": 40, "font": 14, "px": 18, "py": 10, "r": 6},
-        "sm": {"h": 32, "font": 12, "px": 14, "py": 6,  "r": 6}
-    }.get(size, {"h": 40, "font": 14, "px": 18, "py": 10, "r": 6})
+        "lg": {"h": 46, "font": 15, "px": 22, "py": 12, "r": 8},
+        "md": {"h": 38, "font": 13, "px": 16, "py": 9, "r": 6},
+        "sm": {"h": 30, "font": 12, "px": 12, "py": 5, "r": 6},
+        "xs": {"h": 24, "font": 11, "px": 8,  "py": 3, "r": 4}
+    }.get(size, {"h": 38, "font": 13, "px": 16, "py": 9, "r": 6})
 
     min_required_w = int(len(text) * cfg["font"] * 0.72 + 2 * cfg["px"])
     actual_w = max(width, min_required_w) if width else min_required_w
 
     bg, stroke, stroke_w, txt_c, opacity = None, None, 0, tokens[f"{t_pre}/text-main"], 1.0
     if variant == "primary":
-        bg = tokens["brand/primary"]
-        txt_c = "#FFFFFF"
+        bg, txt_c = tokens["brand/primary"], "#FFFFFF"
         if state == "hover": bg = tokens["brand/primary-hover"]
-        elif state == "active": bg = tokens["brand/primary-active"]
         elif state == "disabled": opacity = 0.45
     elif variant == "secondary":
-        bg, stroke, stroke_w = tokens[f"{t_pre}/card"], tokens[f"{t_pre}/border"], 1
-        txt_c = tokens[f"{t_pre}/text-main"]
-        if state == "hover": bg = tokens[f"{t_pre}/card-subtle"]
+        bg, stroke, stroke_w, txt_c = tokens[f"{t_pre}/card-tint"], tokens[f"{t_pre}/border"], 1, tokens[f"{t_pre}/text-main"]
+        if state == "hover": bg = tokens[f"{t_pre}/border"]
         elif state == "disabled": opacity = 0.45
     elif variant == "outline":
         stroke, stroke_w, txt_c = tokens[f"{t_pre}/border"], 1, tokens[f"{t_pre}/text-main"]
@@ -136,12 +165,10 @@ def make_btn(parent, text, variant="primary", theme="light", size="md", width=No
         bg, stroke, stroke_w, txt_c = tokens[f"{t_pre}/safe-bg"], tokens[f"{t_pre}/safe-bdr"], 1, tokens[f"{t_pre}/safe-txt"]
     elif variant == "ghost":
         txt_c = tokens[f"{t_pre}/text-sec"]
-        if state == "hover": bg, txt_c = tokens[f"{t_pre}/card-subtle"], tokens[f"{t_pre}/text-main"]
 
     props = {
-        "layout": "horizontal", "mainAlign": "center", "crossAlign": "center",
-        "padding": [cfg["py"], cfg["px"], cfg["py"], cfg["px"]],
-        "cornerRadius": cfg["r"], "opacity": opacity
+        "cornerRadius": cfg["r"], "layout": "horizontal", "mainAlign": "center", "crossAlign": "center",
+        "padding": [cfg["py"], cfg["px"], cfg["py"], cfg["px"]], "opacity": opacity
     }
     if bg: props["fill"] = bg
     else: props["fills"] = []
@@ -153,16 +180,17 @@ def make_btn(parent, text, variant="primary", theme="light", size="md", width=No
     cmd("node.create", {"type": "text", "parent": b["id"], "text": text, "props": {"fontSize": cfg["font"], "fontStyle": "Bold", "fill": txt_c}})
     return b["id"]
 
-# ROBUST STATUS BADGE (HUGS TEXT BEAUTIFULLY)
+# BADGE HELPER
 def make_badge(parent, text, btype="safe", theme="light", size="regular", **kwargs):
     t_pre = "light"
-    cfg = {"regular": {"h": 26, "font": 12, "px": 12, "dot": 6}, "compact": {"h": 20, "font": 10, "px": 8, "dot": 5}}.get(size, {"h": 26, "font": 12, "px": 12, "dot": 6})
+    cfg = {"regular": {"h": 24, "font": 11, "px": 10, "dot": 6}, "compact": {"h": 20, "font": 10, "px": 8, "dot": 5}}.get(size, {"h": 24, "font": 11, "px": 10, "dot": 6})
     mapping = {
         "critical": (tokens[f"{t_pre}/crit-bg"], tokens[f"{t_pre}/crit-bdr"], tokens[f"{t_pre}/crit-txt"]),
         "contradiction": (tokens[f"{t_pre}/contra-bg"], tokens[f"{t_pre}/contra-bdr"], tokens[f"{t_pre}/contra-txt"]),
         "warning": (tokens[f"{t_pre}/warn-bg"], tokens[f"{t_pre}/warn-bdr"], tokens[f"{t_pre}/warn-txt"]),
         "safe": (tokens[f"{t_pre}/safe-bg"], tokens[f"{t_pre}/safe-bdr"], tokens[f"{t_pre}/safe-txt"]),
-        "primary": (tokens[f"{t_pre}/brand-tint"], tokens[f"{t_pre}/brand-bdr"], tokens["brand/primary"])
+        "blue": (tokens[f"{t_pre}/blue-bg"], tokens[f"{t_pre}/blue-bdr"], tokens[f"{t_pre}/blue-txt"]),
+        "primary": (tokens["brand/primary-light"], tokens["brand/primary"], tokens["brand/primary"]),
     }
     bg, bdr, txt_c = mapping.get(btype, mapping["safe"])
     min_badge_w = int(len(text) * cfg["font"] * 0.72 + 2 * cfg["px"] + cfg["dot"] + 8)
@@ -174,43 +202,55 @@ def make_badge(parent, text, btype="safe", theme="light", size="regular", **kwar
     cmd("node.create", {"type": "text", "parent": badge["id"], "text": text, "props": {"fontSize": cfg["font"], "fontStyle": "Bold", "fill": txt_c}})
     return badge["id"]
 
-# UNIFIED ROBUST APP NAVBAR (NO CLIPPING)
-def make_app_navbar(parent, active_tab="Договоры"):
-    t_pre = "light"
+# UNIFIED APP NAVBAR
+def make_app_navbar(parent, active_tab="Договоры", user_name="Алексей Смирнов", user_role="Юрист"):
     nav = cmd("frame.create", {
-        "parent": parent, "name": "Navbar", "x": 0, "y": 0, "width": 1440, "height": 64,
+        "parent": parent, "name": "AppNavbar", "x": 0, "y": 0, "width": 1440, "height": 64,
         "props": {
-            "fill": tokens[f"{t_pre}/card"], "stroke": tokens[f"{t_pre}/border"], "strokeBottomWeight": 1,
+            "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
             "layout": "horizontal", "padding": [0, 36, 0, 36], "mainAlign": "spaceBetween", "crossAlign": "center"
         }
     })
-    # Left container with generous width 760px
-    n_l = cmd("frame.create", {"parent": nav["id"], "width": 760, "height": 40, "props": {"fills": [], "layout": "horizontal", "gap": 36, "crossAlign": "center"}})
+    # Left container: Logo + Tabs
+    n_l = cmd("frame.create", {"parent": nav["id"], "width": 860, "height": 40, "props": {"fills": [], "layout": "horizontal", "gap": 24, "crossAlign": "center"}})
     
-    # Brand logo box (width 160px)
-    brand_box = cmd("frame.create", {"parent": n_l["id"], "width": 160, "height": 30, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
-    mark = cmd("frame.create", {"parent": brand_box["id"], "width": 22, "height": 22, "props": {"fill": tokens["brand/primary"], "cornerRadius": 5, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-    cmd("node.create", {"type": "text", "parent": mark["id"], "text": "§", "props": {"fontSize": 14, "fontStyle": "Bold", "fill": "#FFFFFF"}})
-    make_text(brand_box["id"], "LexAI Legal", font_size=18, font_style="Bold", fill=tokens[f"{t_pre}/text-main"], width=125)
+    # Brand logo box
+    brand_box = cmd("frame.create", {"parent": n_l["id"], "width": 155, "height": 30, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
+    mark = cmd("frame.create", {"parent": brand_box["id"], "width": 24, "height": 24, "props": {"fill": tokens["brand/primary"], "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+    cmd("node.create", {"type": "text", "parent": mark["id"], "text": "§", "props": {"fontSize": 15, "fontStyle": "Bold", "fill": "#FFFFFF"}})
+    make_text(brand_box["id"], "LexAI Legal", font_size=18, font_style="Bold", fill=tokens["light/text-main"], width=115)
     
-    # Navigation links (width 540px)
-    n_links = cmd("frame.create", {"parent": n_l["id"], "width": 540, "height": 30, "props": {"fills": [], "layout": "horizontal", "gap": 24, "crossAlign": "center"}})
-    tab_widths = {"Договоры": 80, "Аналитика рисков": 130, "Корпоративный Playbook": 170, "Команда": 80}
-    for t in ["Договоры", "Аналитика рисков", "Корпоративный Playbook", "Команда"]:
-        is_act = (t == active_tab)
-        clr = tokens["brand/primary"] if is_act else tokens[f"{t_pre}/text-sec"]
-        make_text(n_links["id"], t, font_size=13, font_style="Bold" if is_act else "Regular", fill=clr, width=tab_widths.get(t, 100))
-
-    # Right container with generous width 220px
-    n_r = cmd("frame.create", {"parent": nav["id"], "width": 220, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 14, "crossAlign": "center"}})
-    make_text(n_r["id"], "Алексей Смирнов", font_size=13, font_style="Bold", fill=tokens[f"{t_pre}/text-main"], width=130)
-    av = cmd("frame.create", {"parent": n_r["id"], "width": 34, "height": 34, "props": {"fill": tokens[f"{t_pre}/brand-tint"], "stroke": tokens[f"{t_pre}/brand-bdr"], "strokeWeight": 1, "cornerRadius": 17, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-    make_text(av["id"], "АС", font_size=12, font_style="Bold", fill=tokens["brand/primary"])
+    # Engine badge
+    make_badge(n_l["id"], "GigaChat Enterprise", "primary", size="compact")
+    
+    # Navigation Tabs
+    tabs_box = cmd("frame.create", {"parent": n_l["id"], "width": 510, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 14, "crossAlign": "center"}})
+    tabs = [("Договоры", 80), ("Аналитика рисков", 130), ("Корпоративный Playbook", 175), ("Команда", 80)]
+    for tab_name, tw in tabs:
+        is_act = (tab_name == active_tab)
+        tb = cmd("frame.create", {
+            "parent": tabs_box["id"], "width": tw, "height": 32,
+            "props": {
+                "fill": tokens["brand/primary-light"] if is_act else "#00000000",
+                "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"
+            }
+        })
+        make_text(tb["id"], tab_name, font_size=13, font_style="Bold" if is_act else "Regular", fill=tokens["brand/primary"] if is_act else tokens["light/text-sec"])
+    
+    # Right container: User Profile + Role badge
+    n_r = cmd("frame.create", {"parent": nav["id"], "width": 340, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
+    make_badge(n_r["id"], f"Роль: {user_role}", "blue", size="compact")
+    make_text(n_r["id"], user_name, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=130)
+    
+    # Avatar circle with dynamic initials
+    initials = "".join([part[0] for part in user_name.split()[:2]]) if user_name else "ЮР"
+    av = cmd("frame.create", {"parent": n_r["id"], "width": 34, "height": 34, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["brand/primary"], "strokeWeight": 1.5, "cornerRadius": 17, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+    cmd("node.create", {"type": "text", "parent": av["id"], "text": initials, "props": {"fontSize": 12, "fontStyle": "Bold", "fill": tokens["brand/primary"]}})
     return nav["id"]
 
-# =============================================================================
-# CLEAN UP PAGE 3 PREVIOUS SCREENS
-# =============================================================================
+# ==============================================================================
+# PREPARE PAGE 3 (☀️ Screens — Light Theme)
+# ==============================================================================
 print("Очистка старых экранов на Page 3 (☀️ Screens — Light Theme)...")
 p3_info = cmd("node.get", {"id": 3})
 if p3_info and "children" in p3_info:
@@ -220,734 +260,1126 @@ if p3_info and "children" in p3_info:
         print(f"  Удалено старых узлов: {len(old_ids)}")
 
 cmd("page.select", {"index": 2})
+p3_id = 3
 
-# =============================================================================
+# ==============================================================================
 # SCREEN 1: 01_Onboarding_Auth_Light (x=0, y=0)
-# =============================================================================
-print("\n[1/7] Сборка экрана 01_Onboarding_Auth_Light (Приветствие и Вход)...")
-f1 = cmd("frame.create", {"name": "01_Onboarding_Auth_Light", "x": 0, "y": 0, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+# Полноценный LegalTech портал: выбор типа договора, параметры проверки, 3 персоны входа
+# ==============================================================================
+print("\n[1/7] Сборка экрана 01_Onboarding_Auth_Light (Приветствие, Конфигуратор & Вход)...")
+f1 = cmd("frame.create", {
+    "parent": p3_id, "name": "01_Onboarding_Auth_Light", "x": 0, "y": 0, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f1_id = f1["id"]
 
-# Onboarding Landing Navbar
+# Navbar 1
 nav1 = cmd("frame.create", {
     "parent": f1_id, "name": "LandingNavbar", "x": 0, "y": 0, "width": 1440, "height": 64,
-    "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeBottomWeight": 1, "layout": "horizontal", "padding": [0, 48, 0, 48], "mainAlign": "spaceBetween", "crossAlign": "center"}
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "layout": "horizontal", "padding": [0, 36, 0, 36], "mainAlign": "spaceBetween", "crossAlign": "center"
+    }
 })
-nav1_l = cmd("frame.create", {"parent": nav1["id"], "width": 340, "height": 36, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
-mark1 = cmd("frame.create", {"parent": nav1_l["id"], "width": 22, "height": 22, "props": {"fill": tokens["brand/primary"], "cornerRadius": 5, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-cmd("node.create", {"type": "text", "parent": mark1["id"], "text": "§", "props": {"fontSize": 14, "fontStyle": "Bold", "fill": "#FFFFFF"}})
+nav1_l = cmd("frame.create", {"parent": nav1["id"], "width": 380, "height": 36, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
+mark1 = cmd("frame.create", {"parent": nav1_l["id"], "width": 24, "height": 24, "props": {"fill": tokens["brand/primary"], "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": mark1["id"], "text": "§", "props": {"fontSize": 15, "fontStyle": "Bold", "fill": "#FFFFFF"}})
 make_text(nav1_l["id"], "LexAI Legal", font_size=19, font_style="Bold", fill=tokens["light/text-main"], width=130)
-make_badge(nav1_l["id"], "On-Premise Edition", "primary", size="compact")
+make_badge(nav1_l["id"], "On-Premise 152-ФЗ", "primary", size="compact")
 
 nav1_links = cmd("frame.create", {"parent": nav1["id"], "width": 580, "height": 30, "props": {"fills": [], "layout": "horizontal", "gap": 28, "crossAlign": "center"}})
-for nl, nlw in [("Возможности", 100), ("Безопасность (152-ФЗ)", 160), ("Корпоративный Playbook", 170), ("Тарифы", 65)]:
+for nl, nlw in [("Возможности", 100), ("Интеграции (1С, СПАРК)", 160), ("Корпоративный Playbook", 170), ("Тарифы", 65)]:
     make_text(nav1_links["id"], nl, font_size=13, fill=tokens["light/text-sec"], width=nlw)
 
-nav1_r = cmd("frame.create", {"parent": nav1["id"], "width": 380, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
-make_btn(nav1_r["id"], "Демо-тест без входа", "secondary", "light", "sm", width=175)
+nav1_r = cmd("frame.create", {"parent": nav1["id"], "width": 400, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
+make_btn(nav1_r["id"], "Гостевой экспресс-тест", "secondary", "light", "sm", width=180)
 make_btn(nav1_r["id"], "Войти в систему →", "primary", "light", "sm", width=165)
 
-# Hero 2-Column Split
-hero_split = cmd("frame.create", {"parent": f1_id, "x": 48, "y": 92, "width": 1344, "height": 830, "props": {"fills": [], "layout": "horizontal", "gap": 48, "crossAlign": "center"}})
+# Main Hero Split Layout
+hero = cmd("frame.create", {
+    "parent": f1_id, "name": "HeroLayout", "x": 36, "y": 88, "width": 1368, "height": 860,
+    "props": {"fills": [], "layout": "horizontal", "gap": 36}
+})
 
-# Left Hero Column (720px)
-h_left = cmd("frame.create", {"parent": hero_split["id"], "width": 730, "height": 800, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 20}})
-make_badge(h_left["id"], "ВЕРСИЯ 2.4: АВТОМАТИЧЕСКИЙ ПОИСК КОЛЛИЗИЙ И СТ. 333 ГК РФ", "primary", size="regular")
-make_text(h_left["id"], "Интеллектуальная проверка договоров на риски и противоречия за 1.5 минуты", font_size=32, font_style="Bold", fill=tokens["light/text-main"], width=720)
-make_text(h_left["id"], "ИИ-ассистент юриста и руководителя. Находит нестыковки сроков, скрытые штрафы, неограниченную ответственность и готовит готовый протокол разногласий по ст. ГК РФ.", font_size=15, fill=tokens["light/text-sec"], width=710)
+# LEFT COLUMN: Title, Interactive Configurator & Dropzone (Width 820px)
+h_left = cmd("frame.create", {"parent": hero["id"], "width": 820, "height": 860, "props": {"fills": [], "layout": "vertical", "gap": 16}})
 
-# 3 Value Proposition Cards (Generous 88px height and explicit sub-container widths)
-val_box = cmd("frame.create", {"parent": h_left["id"], "width": 730, "height": 300, "props": {"fills": [], "layout": "vertical", "gap": 14}})
-for v_tag, v_title, v_desc, v_bdr in [
-    ("СКОРОСТЬ", "Анализ за 90 сек вместо 3 часов ручной вычитки", "Экономия до 85% рабочего времени юриста на типовых договорах поставки, подряда, аренды и оказания услуг.", tokens["brand/primary"]),
-    ("КОЛЛИЗИИ", "Поиск взаимных противоречий между пунктами договора", "Уникальный алгоритм сопоставляет сроки оплаты (п. 3.2) и графики поставки (п. 6.4) внутри единого документа.", tokens["light/contra-txt"]),
-    ("БЕЗОПАСНОСТЬ", "100% On-Premise изоляция данных и соответствие 152-ФЗ", "Данные контрактов не передаются в публичные нейросети, не индексируются и не используются для обучения.", tokens["light/safe-txt"])
-]:
-    vc = cmd("frame.create", {
-        "parent": val_box["id"], "width": 730, "height": 88,
-        "props": {
-            "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-            "strokeLeftWeight": 4, "cornerRadius": 8, "layout": "vertical", "padding": [12, 18, 12, 18], "gap": 4
-        }
-    })
-    vc_top = cmd("frame.create", {"parent": vc["id"], "width": 690, "height": 22, "props": {"fills": [], "layout": "horizontal", "gap": 8, "crossAlign": "center"}})
-    make_text(vc_top["id"], v_title, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=680)
-    make_text(vc["id"], v_desc, font_size=12, fill=tokens["light/text-sec"], width=690)
+# Live status pill
+make_badge(h_left["id"], "GigaChat Enterprise • Логический аудит коллизий по ГК РФ", "primary", size="regular")
 
-# Social Proof Footnote
-sp_box = cmd("frame.create", {"parent": h_left["id"], "width": 730, "height": 32, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
-make_text(sp_box["id"], "Доверяют юрдепартаменты 140+ компаний РФ:", font_size=12, fill=tokens["light/text-muted"], width=270)
-for c_name, cw in [("ООО «ПромМашСервис»", 145), ("АО «СеверЛогистик»", 135), ("ТехноПарк Групп", 120)]:
-    cp = cmd("frame.create", {"parent": sp_box["id"], "width": cw, "height": 24, "props": {"fill": tokens["light/card-subtle"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-    make_text(cp["id"], c_name, font_size=11, font_style="Bold", fill=tokens["light/text-sec"])
+# Main Title & Subtitle
+make_text(h_left["id"], "Интеллектуальная проверка договоров на риски и коллизии за 90 секунд", font_size=28, font_style="Bold", fill=tokens["light/text-main"], width=820)
+make_text(h_left["id"], "ИИ-ассистент юриста и руководителя: сопоставляет разделы документа, выявляет скрытые штрафы, несоразмерную неустойку и готовит юридически безопасный протокол разногласий.", font_size=14, fill=tokens["light/text-sec"], width=820)
 
-# Right Auth & Fast Test Card (560px)
-h_right = cmd("frame.create", {
-    "parent": hero_split["id"], "width": 560, "height": 720,
+# INTERACTIVE CONFIGURATOR CARD (Card 820 x 470)
+cfg_card = cmd("frame.create", {
+    "parent": h_left["id"], "width": 820, "height": 470,
     "props": {
         "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 16, "layout": "vertical", "padding": 36, "gap": 18, "mainAlign": "center"
+        "cornerRadius": 12, "layout": "vertical", "padding": [20, 24, 20, 24], "gap": 14
     }
 })
-make_text(h_right["id"], "Вход в систему LexAI", font_size=22, font_style="Bold", fill=tokens["light/text-main"], width=488)
-make_text(h_right["id"], "Войдите в защищенный корпоративный контур вашей организации", font_size=13, fill=tokens["light/text-sec"], width=488)
 
-# Role Selector Tabs
-role_row = cmd("frame.create", {"parent": h_right["id"], "width": 488, "height": 38, "props": {"fill": tokens["light/card-subtle"], "cornerRadius": 8, "layout": "horizontal", "padding": 3, "gap": 4}})
-r_act = cmd("frame.create", {"parent": role_row["id"], "width": 238, "height": 32, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-make_text(r_act["id"], "Юрист / Комплаенс", font_size=12, font_style="Bold", fill=tokens["brand/primary"])
-r_inact = cmd("frame.create", {"parent": role_row["id"], "width": 238, "height": 32, "props": {"fills": [], "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-make_text(r_inact["id"], "Руководитель / Директор", font_size=12, fill=tokens["light/text-sec"])
+# Section 1: Choose Contract Type
+make_text(cfg_card["id"], "1. Выберите тип входящего договора:", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=770)
+types_row = cmd("frame.create", {"parent": cfg_card["id"], "width": 770, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 10}})
+ctypes = [
+    ("✓ Поставка оборудования", True, 175),
+    ("Аренда коммерч.", False, 135),
+    ("Подряд и проект.", False, 135),
+    ("Оказание услуг", False, 125),
+    ("NDA / Конфид.", False, 120)
+]
+for ct_name, is_act, cw in ctypes:
+    cb = cmd("frame.create", {
+        "parent": types_row["id"], "width": cw, "height": 32,
+        "props": {
+            "fill": tokens["brand/primary"] if is_act else tokens["light/card-tint"],
+            "stroke": tokens["brand/primary"] if is_act else tokens["light/border"],
+            "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"
+        }
+    })
+    cmd("node.create", {"type": "text", "parent": cb["id"], "text": ct_name, "props": {"fontSize": 12, "fontStyle": "Bold" if is_act else "Regular", "fill": "#FFFFFF" if is_act else tokens["light/text-main"]}})
 
-# Form Fields
-for lbl, val in [("Рабочий Email юриста", "alexey.smirnov@technosnab.ru"), ("Пароль", "••••••••••••••••")]:
-    ib = cmd("frame.create", {"parent": h_right["id"], "width": 488, "height": 64, "props": {"fills": [], "layout": "vertical", "gap": 6}})
-    make_text(ib["id"], lbl, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=488)
-    inp = cmd("frame.create", {"parent": ib["id"], "width": 488, "height": 40, "props": {"fill": tokens["light/card-subtle"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 8, "layout": "horizontal", "padding": [0, 14, 0, 14], "crossAlign": "center"}})
-    make_text(inp["id"], val, font_size=13, fill=tokens["light/text-main"] if "@" in val else tokens["light/text-muted"], width=460)
+# Section 2: Analysis Parameters (Checkboxes)
+make_text(cfg_card["id"], "2. Настройте параметры анализа (ИИ + Корпоративный Playbook):", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=770)
+params_grid = cmd("frame.create", {"parent": cfg_card["id"], "width": 770, "height": 60, "props": {"fills": [], "layout": "horizontal", "gap": 14}})
+p_col1 = cmd("frame.create", {"parent": params_grid["id"], "width": 375, "height": 60, "props": {"fills": [], "layout": "vertical", "gap": 8}})
+p_col2 = cmd("frame.create", {"parent": params_grid["id"], "width": 375, "height": 60, "props": {"fills": [], "layout": "vertical", "gap": 8}})
 
-make_btn(h_right["id"], "Войти в систему →", "primary", "light", "md", width=488)
-make_btn(h_right["id"], "Войти через Корпоративный SSO / Госуслуги", "secondary", "light", "md", width=488)
+for p_text, p_col in [
+    ("☑ Проверка неустоек и штрафов (ст. 333 ГК РФ)", p_col1),
+    ("☑ Сверка с корпоративным Playbook ООО «ТехноСнаб»", p_col1),
+    ("☑ Поиск внутренних коллизий сроков и оплат", p_col2),
+    ("☑ Извлечение сущностей (суммы, даты, реквизиты)", p_col2)
+]:
+    p_box = cmd("frame.create", {"parent": p_col["id"], "width": 375, "height": 26, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border-subtle"], "strokeWeight": 1, "cornerRadius": 4, "layout": "horizontal", "padding": [0, 10, 0, 10], "crossAlign": "center"}})
+    make_text(p_box["id"], p_text, font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=355)
 
-div_or = cmd("frame.create", {"parent": h_right["id"], "width": 488, "height": 1, "props": {"fill": tokens["light/border"]}})
-
-# Fast Test Dropzone in Auth Card
-test_dz = cmd("frame.create", {
-    "parent": h_right["id"], "width": 488, "height": 85,
+# Section 3: Dropzone
+make_text(cfg_card["id"], "3. Загрузите файл документа (PDF, DOCX) или пакет файлов:", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=770)
+h_dz = cmd("frame.create", {
+    "parent": cfg_card["id"], "width": 770, "height": 135,
     "props": {
-        "fill": tokens["light/brand-tint"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 1.5,
-        "cornerRadius": 8, "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "padding": 12, "gap": 4
+        "fill": tokens["light/card-warm"], "stroke": tokens["brand/primary"], "strokeWeight": 1.5,
+        "cornerRadius": 8, "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "padding": [14, 20, 14, 20], "gap": 8
     }
 })
-make_text(test_dz["id"], "Или перетащите договор сюда для экспресс-проверки", font_size=12, font_style="Bold", fill=tokens["brand/primary"], width=460, textAlign="center")
-make_text(test_dz["id"], "Бесплатный демо-анализ первых 3 страниц без регистрации (.PDF, .DOCX)", font_size=11, fill=tokens["light/text-sec"], width=460, textAlign="center")
+make_text(h_dz["id"], "📁 Перетащите договор (.pdf, .docx до 50 МБ) или выберите на компьютере", font_size=14, font_style="Bold", fill=tokens["brand/primary"])
+make_text(h_dz["id"], "Поддерживается пакетная загрузка до 10 договоров • Двуязычные договоры (RU / EN) • OCR сканов", font_size=11, fill=tokens["light/text-sec"])
+
+dz_btns = cmd("frame.create", {"parent": h_dz["id"], "width": 420, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 12, "mainAlign": "center"}})
+make_btn(dz_btns["id"], "Запустить глубокий анализ", "primary", "light", "sm", width=210)
+make_btn(dz_btns["id"], "Выбрать файл с диска", "secondary", "light", "sm", width=180)
+
+# Social Proof & Integration badges
+proof_box = cmd("frame.create", {"parent": h_left["id"], "width": 820, "height": 38, "props": {"fills": [], "layout": "horizontal", "gap": 12, "crossAlign": "center"}})
+make_text(proof_box["id"], "Интеграции:", font_size=12, font_style="Bold", fill=tokens["light/text-muted"], width=80)
+for int_name in ["1С:Документооборот", "Диадок СЭД", "СПАРК / Мой Арбитр", "GigaChat API"]:
+    ib = cmd("frame.create", {"parent": proof_box["id"], "width": 150, "height": 26, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+    make_text(ib["id"], int_name, font_size=11, font_style="Bold", fill=tokens["light/text-sec"])
+
+# RIGHT COLUMN: Multi-Persona Auth & Guest Mode Showcase (Width 510px)
+h_right = cmd("frame.create", {"parent": hero["id"], "width": 510, "height": 860, "props": {"fills": [], "layout": "vertical", "gap": 18}})
+
+# AUTH CARD WITH 3 PERSONAS
+auth_card = cmd("frame.create", {
+    "parent": h_right["id"], "width": 510, "height": 550,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 12, "layout": "vertical", "padding": [28, 28, 28, 28], "gap": 14
+    }
+})
+
+make_text(auth_card["id"], "Вход в систему LexAI", font_size=20, font_style="Bold", fill=tokens["light/text-main"], width=450)
+make_text(auth_card["id"], "Выберите портрет пользователя (из отчета POA) для тестирования:", font_size=12, fill=tokens["light/text-sec"], width=450)
+
+# Persona Switcher (3 Tabs: Alexey 50%, Olga 25%, Dmitry 25%)
+persona_box = cmd("frame.create", {
+    "parent": auth_card["id"], "width": 454, "height": 44,
+    "props": {"fill": tokens["light/card-tint"], "cornerRadius": 8, "layout": "horizontal", "padding": [4, 4, 4, 4], "gap": 4}
+})
+for p_title, p_sub, is_active, pw in [
+    ("Алексей (50%)", "Юрист", True, 150),
+    ("Ольга (25%)", "Руководитель", False, 146),
+    ("Дмитрий (25%)", "Закупки/Директор", False, 150)
+]:
+    pb = cmd("frame.create", {
+        "parent": persona_box["id"], "width": pw, "height": 36,
+        "props": {
+            "fill": tokens["light/card"] if is_active else "#00000000",
+            "stroke": tokens["brand/primary"] if is_active else "#00000000",
+            "strokeWeight": 1 if is_active else 0,
+            "cornerRadius": 6, "layout": "vertical", "mainAlign": "center", "crossAlign": "center"
+        }
+    })
+    cmd("node.create", {"type": "text", "parent": pb["id"], "text": p_title, "props": {"fontSize": 11, "fontStyle": "Bold", "fill": tokens["brand/primary"] if is_active else tokens["light/text-sec"]}})
+    cmd("node.create", {"type": "text", "parent": pb["id"], "text": p_sub, "props": {"fontSize": 9, "fill": tokens["light/text-muted"]}})
+
+# Input 1: Work Email
+make_text(auth_card["id"], "Корпоративный Email:", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=450)
+inp1 = cmd("frame.create", {"parent": auth_card["id"], "width": 454, "height": 40, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [0, 14, 0, 14], "crossAlign": "center"}})
+make_text(inp1["id"], "alexey.smirnov@technosnab.ru", font_size=13, fill=tokens["light/text-main"])
+
+# Input 2: Password
+make_text(auth_card["id"], "Пароль учетной записи:", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=450)
+inp2 = cmd("frame.create", {"parent": auth_card["id"], "width": 454, "height": 40, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [0, 14, 0, 14], "crossAlign": "center"}})
+make_text(inp2["id"], "••••••••••••••••••••", font_size=14, fill=tokens["light/text-muted"])
+
+# 2FA checkbox
+chk_row = cmd("frame.create", {"parent": auth_card["id"], "width": 454, "height": 22, "props": {"fills": [], "layout": "horizontal", "gap": 8, "crossAlign": "center"}})
+make_badge(chk_row["id"], "2FA ГОСТ", "safe", size="compact")
+make_text(chk_row["id"], "Безопасная сессия на доверенном рабочем месте юриста", font_size=11, fill=tokens["light/text-sec"])
+
+# Action Buttons
+make_btn(auth_card["id"], "Войти в рабочий кабинет →", "primary", "light", "md", width=454)
+make_btn(auth_card["id"], "Вход через Корпоративный SSO / Госуслуги (ЕСИА)", "secondary", "light", "md", width=454)
+
+# GUEST EXECUTIVE SUMMARY CARD (From Story Map MVP)
+guest_card = cmd("frame.create", {
+    "parent": h_right["id"], "width": 510, "height": 130,
+    "props": {
+        "fill": tokens["light/crit-bg"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [14, 18, 14, 18], "gap": 6
+    }
+})
+make_text(guest_card["id"], "💼 Экспресс-проверка для руководителя (Дмитрия):", font_size=13, font_style="Bold", fill=tokens["light/crit-txt"], width=470)
+make_text(guest_card["id"], "Проверьте договор без авторизации: получите 1-страничное Executive Summary с вердиктом (подписывать или отклонять) и расчетом финансовых рисков по ст. 333 ГК РФ.", font_size=11, fill=tokens["light/text-sec"], width=470)
+make_btn(guest_card["id"], "Попробовать демо без регистрации (3 страницы) →", "danger", "light", "xs", width=470)
 
 
-# =============================================================================
+# ==============================================================================
 # SCREEN 2: 02_Dashboard_Light (x=1500, y=0)
-# =============================================================================
+# Рабочий стол юриста: реестр договоров, СПАРК-рейтинг, фильтры, пакетная загрузка
+# ==============================================================================
 print("\n[2/7] Сборка экрана 02_Dashboard_Light (Главная / Реестр договоров)...")
-f2 = cmd("frame.create", {"name": "02_Dashboard_Light", "x": 1500, "y": 0, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+f2 = cmd("frame.create", {
+    "parent": p3_id, "name": "02_Dashboard_Light", "x": 1500, "y": 0, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f2_id = f2["id"]
-make_app_navbar(f2_id, "Договоры")
+make_app_navbar(f2_id, "Договоры", "Алексей Смирнов", "Юрист")
 
-d_body = cmd("frame.create", {"parent": f2_id, "x": 36, "y": 88, "width": 1368, "height": 840, "props": {"fills": [], "layout": "vertical", "gap": 20, "sizingH": "fixed"}})
+d_body = cmd("frame.create", {
+    "parent": f2_id, "name": "DashboardBody", "x": 36, "y": 84, "width": 1368, "height": 870,
+    "props": {"fills": [], "layout": "vertical", "gap": 16}
+})
 
-# KPI Row with Top Color Bars (Archetype 1)
-k_row = cmd("frame.create", {"parent": d_body["id"], "width": 1368, "height": 95, "props": {"fills": [], "layout": "horizontal", "gap": 16, "sizingH": "fill"}})
-for kt, kv, ks, ktype, top_color, badge_text in [
-    ("Проверено договоров", "148 шт.", "+18 за неделю", "safe", tokens["brand/primary"], "В норме"),
-    ("Критических рисков", "38 условий", "Штрафы и неустойки", "critical", tokens["light/crit-txt"], "Внимание"),
-    ("Логических коллизий", "19 коллизий", "Несовпадение сроков", "contradiction", tokens["light/contra-txt"], "Коллизии"),
-    ("Среднее время анализа", "1 мин 18 сек", "Норматив < 2 мин", "safe", tokens["light/safe-txt"], "Отлично")
-]:
-    kc = cmd("frame.create", {
-        "parent": k_row["id"], "width": 330, "height": 95,
+# TOP COMMAND BAR (Mode switcher, Search & Upload actions)
+cmd_bar = cmd("frame.create", {
+    "parent": d_body["id"], "width": 1368, "height": 44,
+    "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}
+})
+# Left side of command bar: Title & Persona Mode Switcher
+cmd_l = cmd("frame.create", {"parent": cmd_bar["id"], "width": 630, "height": 40, "props": {"fills": [], "layout": "horizontal", "gap": 16, "crossAlign": "center"}})
+make_text(cmd_l["id"], "Реестр договоров и аудит", font_size=20, font_style="Bold", fill=tokens["light/text-main"], width=270)
+# Mode Switcher
+mode_box = cmd("frame.create", {"parent": cmd_l["id"], "width": 340, "height": 34, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [2, 2, 2, 2], "gap": 2}})
+m_b1 = cmd("frame.create", {"parent": mode_box["id"], "width": 166, "height": 28, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": m_b1["id"], "text": "Вид юриста (детальный)", "props": {"fontSize": 11, "fontStyle": "Bold", "fill": "#FFFFFF"}})
+m_b2 = cmd("frame.create", {"parent": mode_box["id"], "width": 166, "height": 28, "props": {"fills": [], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": m_b2["id"], "text": "Вид директора (Executive)", "props": {"fontSize": 11, "fill": tokens["light/text-sec"]}})
+
+# Right side: Search & Batch actions
+cmd_r = cmd("frame.create", {"parent": cmd_bar["id"], "width": 720, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
+s_inp = cmd("frame.create", {"parent": cmd_r["id"], "width": 260, "height": 36, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [0, 14, 0, 14], "crossAlign": "center"}})
+make_text(s_inp["id"], "🔍 Поиск контрагента, ИНН...", font_size=11, fill=tokens["light/text-muted"])
+make_btn(cmd_r["id"], "+ Пакетная загрузка", "secondary", "light", "sm", width=180)
+make_btn(cmd_r["id"], "Загрузить договор", "primary", "light", "sm", width=160)
+
+# 4 KPI CARDS (Archetype 1: Top color bars)
+kpi_row = cmd("frame.create", {"parent": d_body["id"], "width": 1368, "height": 96, "props": {"fills": [], "layout": "horizontal", "gap": 16}})
+kpis = [
+    ("Проверено договоров", "148 шт.", "+18 за текущую неделю", "safe", tokens["brand/primary"], "В норме"),
+    ("Предотвращено штрафов", "18.4 млн ₽", "По ст. 333 ГК РФ и лимитам", "critical", tokens["light/crit-txt"], "Защита активов"),
+    ("Логических коллизий", "19 коллизий", "Несовпадение сроков и оплат", "contradiction", tokens["light/contra-txt"], "Коллизии"),
+    ("Точность анализа ИИ", "98.2%", "Верифицировано юристами", "safe", tokens["light/safe-txt"], "Отлично")
+]
+for kt, kv, ks, ktype, top_color, badge_text in kpis:
+    card = cmd("frame.create", {
+        "parent": kpi_row["id"], "width": 330, "height": 96,
         "props": {
             "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-            "strokeTopWeight": 3, "cornerRadius": 10, "layout": "vertical", "padding": [12, 16, 12, 16], "gap": 4, "sizingH": "fill"
+            "cornerRadius": 10, "layout": "vertical", "padding": [0, 18, 14, 18], "gap": 6
         }
     })
-    kc_top = cmd("frame.create", {"parent": kc["id"], "width": 298, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-    make_text(kc_top["id"], kt, font_size=11, fill=tokens["light/text-sec"], width=190)
-    make_badge(kc_top["id"], badge_text, ktype, "light", "compact")
-    make_text(kc["id"], kv, font_size=20, font_style="Bold", fill=top_color, width=298)
-    make_text(kc["id"], ks, font_size=11, fill=tokens["light/text-muted"], width=298)
+    # Top color stripe
+    cmd("frame.create", {"parent": card["id"], "width": 330, "height": 4, "props": {"fill": top_color, "cornerRadius": 2}})
+    # Header row
+    chdr = cmd("frame.create", {"parent": card["id"], "width": 294, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+    make_text(chdr["id"], kt, font_size=11, font_style="Bold", fill=tokens["light/text-sec"])
+    make_badge(chdr["id"], badge_text, ktype, size="compact")
+    # Value
+    make_text(card["id"], kv, font_size=20, font_style="Bold", fill=tokens["light/text-main"])
+    # Subtitle
+    make_text(card["id"], ks, font_size=11, fill=tokens["light/text-muted"])
 
-# Dropzone Container (Archetype 5) with generous inner frames
-up = cmd("frame.create", {
-    "parent": d_body["id"], "width": 1368, "height": 175,
-    "props": {
-        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 18, "gap": 12, "sizingH": "fill"
-    }
-})
-make_text(up["id"], "Быстрая загрузка договора на проверку", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=1332)
-
-dz = cmd("frame.create", {
-    "parent": up["id"], "width": 1332, "height": 76,
-    "props": {
-        "fill": tokens["light/card-subtle"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 1.5,
-        "cornerRadius": 8, "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "padding": [0, 24, 0, 24], "sizingH": "fill"
-    }
-})
-# dz_l: width 800, height 50
-dz_l = cmd("frame.create", {"parent": dz["id"], "width": 800, "height": 50, "props": {"fills": [], "layout": "vertical", "gap": 4}})
-make_text(dz_l["id"], "Перетащите файл договора для извлечения текста и проверки коллизий", font_size=13, font_style="Bold", fill=tokens["brand/primary"], width=780)
-
-chips = cmd("frame.create", {"parent": dz_l["id"], "width": 300, "height": 22, "props": {"fills": [], "layout": "horizontal", "gap": 8, "crossAlign": "center"}})
-for c_txt, cw in [(".PDF", 45), (".DOCX", 55), ("до 50 МБ", 70)]:
-    cp = cmd("frame.create", {"parent": chips["id"], "width": cw, "height": 20, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-    make_text(cp["id"], c_txt, font_size=10, font_style="Bold", fill=tokens["light/text-sec"])
-
-# dz_r: width 360, height 40
-dz_r = cmd("frame.create", {"parent": dz["id"], "width": 360, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
-make_btn(dz_r["id"], "Запустить анализ ИИ", "primary", "light", "md", width=180)
-make_btn(dz_r["id"], "Выбрать файл", "secondary", "light", "md", width=130)
-
-# Registry Table Container
-t_card = cmd("frame.create", {
-    "parent": d_body["id"], "width": 1368, "height": 490,
-    "props": {
-        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 18, "gap": 10, "sizingH": "fill"
-    }
-})
-t_hdr = cmd("frame.create", {"parent": t_card["id"], "width": 1332, "height": 28, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_text(t_hdr["id"], "Реестр проверенных договоров", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=300)
-make_badge(t_hdr["id"], "Всего 148 документов", "safe", "light", "compact")
-
-t_th = cmd("frame.create", {"parent": t_card["id"], "width": 1332, "height": 34, "props": {"fill": tokens["light/card-subtle"], "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center", "sizingH": "fill"}})
-for tt, tw in [("Документ и контрагент", 380), ("Тип договора", 160), ("Уровень риска", 180), ("Выявленные замечания", 260), ("Статус проверки", 150), ("Действие", 150)]:
-    make_text(t_th["id"], tt, font_size=12, font_style="Bold", fill=tokens["light/text-sec"], width=tw)
-
-for fname, counterpart, dtype, rlevel, rtype, problems, status, action_text, btn_style in [
-    ("Договор_поставки_станков_№48-2026.docx", "ООО «ПромМашСервис»", "Поставка оборудования", "Критический (78%)", "critical", "3 риска • 2 коллизии сроков", "Требует правок", "Открыть отчет", "primary"),
-    ("NDA_Соглашение_о_конфиденциальности.pdf", "ООО «ТехноПарк Групп»", "NDA / Соглашение", "Безопасно (12%)", "safe", "0 рисков • Соответствие норме", "Согласовано", "Скачать резюме", "secondary"),
-    ("Договор_оказания_маркетинговых_услуг.docx", "ИП Соколов В.А.", "Возмездное оказание услуг", "Средний риск (42%)", "warning", "1 риск: короткий срок претензий", "На согласовании", "Смотреть правки", "primary"),
-    ("Аренда_складского_помещения_Б-4.pdf", "АО «СеверЛогистик»", "Аренда коммерч. недвиж.", "Критический (65%)", "critical", "2 риска: скрытая индексация 25%", "Отклонено ИИ", "Открыть отчет", "primary"),
-    ("Лицензионный_договор_ПО_v2.docx", "ООО «СофтЛаб Технологии»", "Лицензионный договор", "Безопасно (08%)", "safe", "0 рисков • Стандартная форма", "Готово к подписи", "Скачать резюме", "secondary")
-]:
-    tr = cmd("frame.create", {"parent": t_card["id"], "width": 1332, "height": 52, "props": {"fills": [], "stroke": tokens["light/border"], "strokeBottomWeight": 1, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center", "sizingH": "fill"}})
-    dc = cmd("frame.create", {"parent": tr["id"], "width": 380, "height": 45, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
-    make_text(dc["id"], fname, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=360)
-    make_text(dc["id"], counterpart, font_size=11, fill=tokens["light/text-muted"], width=360)
-    make_text(tr["id"], dtype, font_size=12, fill=tokens["light/text-sec"], width=160)
-    rc = cmd("frame.create", {"parent": tr["id"], "width": 180, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
-    make_badge(rc["id"], rlevel, rtype, "light", "compact")
-    make_text(tr["id"], problems, font_size=12, fill=tokens["light/text-sec"], width=260)
-    make_text(tr["id"], status, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=150)
-    ac = cmd("frame.create", {"parent": tr["id"], "width": 150, "height": 34, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
-    make_btn(ac["id"], action_text, btn_style, "light", "sm", width=135)
-
-
-# =============================================================================
-# SCREEN 3: 03_Processing_Light (x=3000, y=0)
-# =============================================================================
-print("\n[3/7] Сборка экрана 03_Processing_Light (Процесс анализа документа в реальном времени)...")
-f3 = cmd("frame.create", {"name": "03_Processing_Light", "x": 3000, "y": 0, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
-f3_id = f3["id"]
-make_app_navbar(f3_id, "Договоры")
-
-proc_center = cmd("frame.create", {
-    "parent": f3_id, "x": 270, "y": 95, "width": 900, "height": 800,
-    "props": {
-        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 16, "layout": "vertical", "padding": 40, "gap": 22, "mainAlign": "center", "crossAlign": "center"
-    }
-})
-
-# Pulsing Engine Icon Box
-loader_icon = cmd("frame.create", {"parent": proc_center["id"], "width": 68, "height": 68, "props": {"fill": tokens["light/brand-tint"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 2, "cornerRadius": 34, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-cmd("node.create", {"type": "text", "parent": loader_icon["id"], "text": "⚡", "props": {"fontSize": 30, "fill": tokens["brand/primary"]}})
-
-make_text(proc_center["id"], "Выполняется глубокий ИИ-анализ договора...", font_size=22, font_style="Bold", fill=tokens["light/text-main"], width=820, textAlign="center")
-make_text(proc_center["id"], "Документ: Договор_поставки_станков_№48-2026.docx (8 страниц, 4 850 000 руб.)", font_size=13, fill=tokens["light/text-sec"], width=820, textAlign="center")
-
-# Progress Bar Container
-pbar_wrap = cmd("frame.create", {"parent": proc_center["id"], "width": 820, "height": 10, "props": {"fill": tokens["light/border"], "cornerRadius": 5}})
-pbar_fill = cmd("frame.create", {"parent": pbar_wrap["id"], "width": 672, "height": 10, "props": {"fill": tokens["brand/primary"], "cornerRadius": 5}})
-if "brand/primary" in var_ids: bind(pbar_fill["id"], "fill", "brand/primary")
-
-make_text(proc_center["id"], "Прогресс проверки: 82% • Расчетное время завершения: ~12 секунд", font_size=12, font_style="Bold", fill=tokens["brand/primary"], width=820, textAlign="center")
-
-# Stepper Timeline Items
-steps_box = cmd("frame.create", {"parent": proc_center["id"], "width": 820, "height": 330, "props": {"fills": [], "layout": "vertical", "gap": 10}})
-for s_icon, s_title, s_detail, s_badge, s_btype in [
-    ("✓", "Извлечение текста, таблиц и реквизитов сторон", "Распознано 1 420 слов, 8 разделов, 2 подписанта", "Завершено", "safe"),
-    ("✓", "Классификация договора и нормативный анализ ст. ГК РФ", "Сопоставление со ст. 333, 401, 421 ГК РФ (неустойка, форс-мажор)", "Завершено", "safe"),
-    ("✓", "Проверка соответствия корпоративному Playbook ООО «ТехноСнаб»", "Выявлено 3 отклонения от утвержденных лимитов компании", "3 риска", "critical"),
-    ("⟳", "Поиск логических противоречий между условиями договора", "Анализ конфликта сроков: п. 3.2 (5 дней) vs п. 6.4 (30 дней)...", "В процессе", "primary"),
-    ("⏳", "Генерация юридически безопасных альтернативных формулировок", "Подготовка правок и редакции для протокола разногласий", "В очереди", "warning")
-]:
-    sitem = cmd("frame.create", {
-        "parent": steps_box["id"], "width": 820, "height": 56,
+# Filter pills row
+filters_row = cmd("frame.create", {"parent": d_body["id"], "width": 1368, "height": 32, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
+make_text(filters_row["id"], "Фильтры:", font_size=12, font_style="Bold", fill=tokens["light/text-muted"], width=65)
+pills = [
+    ("Все договоры (148)", True, 135),
+    ("Критический риск (12)", False, 145),
+    ("Коллизии сроков (19)", False, 140),
+    ("Требуют правок (24)", False, 140),
+    ("Согласовано (98)", False, 120),
+    ("Поставка (64)", False, 105),
+    ("Аренда (28)", False, 90),
+    ("Подряд (32)", False, 95)
+]
+for p_name, is_act, pw in pills:
+    pb = cmd("frame.create", {
+        "parent": filters_row["id"], "width": pw, "height": 28,
         "props": {
-            "fill": tokens["light/card-subtle"] if s_badge != "В процессе" else tokens["light/brand-tint"],
-            "stroke": tokens["light/brand-bdr"] if s_badge == "В процессе" else tokens["light/border"],
-            "strokeWeight": 1, "cornerRadius": 8, "layout": "horizontal", "padding": [0, 18, 0, 18], "crossAlign": "center", "gap": 14
+            "fill": tokens["brand/primary-light"] if is_act else tokens["light/card"],
+            "stroke": tokens["brand/primary"] if is_act else tokens["light/border"],
+            "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"
         }
     })
-    cmd("node.create", {"type": "text", "parent": sitem["id"], "text": s_icon, "props": {"fontSize": 14, "fontStyle": "Bold", "fill": tokens["brand/primary"] if s_badge == "В процессе" else (tokens["light/safe-txt"] if s_btype == "safe" else tokens["light/text-muted"])}})
-    st_col = cmd("frame.create", {"parent": sitem["id"], "width": 640, "height": 42, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
-    make_text(st_col["id"], s_title, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=630)
-    make_text(st_col["id"], s_detail, font_size=11, fill=tokens["light/text-sec"], width=630)
-    make_badge(sitem["id"], s_badge, s_btype, "light", "compact")
+    cmd("node.create", {"type": "text", "parent": pb["id"], "text": p_name, "props": {"fontSize": 11, "fontStyle": "Bold" if is_act else "Regular", "fill": tokens["brand/primary"] if is_act else tokens["light/text-sec"]}})
 
-# Cancel Action & Security Pill
-make_btn(proc_center["id"], "Отменить проверку", "ghost", "light", "sm", width=170)
-make_badge(proc_center["id"], "🔒 Изолированный локальный контур (152-ФЗ)", "safe", "light", "compact")
+# REGISTRY TABLE CONTAINER (Card 1368 x 640)
+t_card = cmd("frame.create", {
+    "parent": d_body["id"], "width": 1368, "height": 640,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "clip": True
+    }
+})
+
+# Table Header (Height 42)
+t_hdr = cmd("frame.create", {
+    "parent": t_card["id"], "width": 1368, "height": 42,
+    "props": {
+        "fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "layout": "horizontal", "padding": [0, 24, 0, 24], "crossAlign": "center"
+    }
+})
+cols = [
+    ("Документ и контрагент", 310),
+    ("СПАРК / Проверка", 175),
+    ("Тип и сумма", 165),
+    ("Оценка риска ИИ", 165),
+    ("Выявленные дефекты", 275),
+    ("Статус", 120),
+    ("Действия", 110)
+]
+for c_title, cw in cols:
+    make_text(t_hdr["id"], c_title, font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=cw)
+
+# 5 Rich Contract Rows
+contracts = [
+    ("Договор_поставки_станков_№48-2026.docx", "ООО «ПромМашСервис»", "СПАРК: 89/100 (Высокий)", "safe", "Поставка • 4.85 млн ₽", "Критический (78/100)", "critical", "Штраф 5%/день + Коллизия п. 3.2 vs 6.4", "Требует правок", "critical", "Открыть", "primary"),
+    ("NDA_Соглашение_о_конфиденциальности.pdf", "ООО «ТехноПарк Групп»", "СПАРК: 94/100 (Надежный)", "safe", "NDA • Без цены", "Безопасно (12/100)", "safe", "0 рисков • Полное соответствие Playbook", "Согласовано", "safe", "Резюме", "secondary"),
+    ("Договор_подряда_на_монтаж_v2.docx", "АО «СтройИнжиниринг»", "СПАРК: 72/100 (Внимание)", "warning", "Подряд • 12.3 млн ₽", "Средний риск (45/100)", "warning", "1 риск: Нет предела ответственности", "На согласовании", "warning", "Открыть", "secondary"),
+    ("Аренда_складского_комплекса_Север.pdf", "АО «СеверЛогистик»", "СПАРК: 65/100 (2 иска)", "critical", "Аренда • 850 тыс. ₽/мес", "Критический (65/100)", "critical", "2 риска: Скрытая индексация ставки 25%", "Отклонено ИИ", "critical", "Открыть", "danger"),
+    ("Лицензионный_договор_ПО_v2.docx", "ООО «СофтЛаб Технологии»", "СПАРК: 98/100 (Идеально)", "safe", "Лицензия • 1.2 млн ₽", "Безопасно (08/100)", "safe", "0 рисков • Стандартная форма", "Готово к подписи", "safe", "Резюме", "secondary")
+]
+
+for doc_name, cp_name, spark_info, spark_type, c_type_sum, r_score, r_type, defects, st_text, st_type, btn_txt, btn_var in contracts:
+    row = cmd("frame.create", {
+        "parent": t_card["id"], "width": 1368, "height": 64,
+        "props": {
+            "fills": [], "stroke": tokens["light/border-subtle"], "strokeWeight": 1,
+            "layout": "horizontal", "padding": [0, 24, 0, 24], "crossAlign": "center"
+        }
+    })
+    # Col 1: Doc & Counterparty
+    c1 = cmd("frame.create", {"parent": row["id"], "width": 310, "height": 42, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
+    make_text(c1["id"], doc_name, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=300)
+    make_text(c1["id"], cp_name, font_size=11, fill=tokens["light/text-sec"], width=300)
+    
+    # Col 2: SPARK
+    c2 = cmd("frame.create", {"parent": row["id"], "width": 175, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
+    make_badge(c2["id"], spark_info, spark_type, size="compact")
+    
+    # Col 3: Type & Sum
+    c3 = cmd("frame.create", {"parent": row["id"], "width": 165, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
+    make_text(c3["id"], c_type_sum, font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=155)
+    
+    # Col 4: Risk score
+    c4 = cmd("frame.create", {"parent": row["id"], "width": 165, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
+    make_badge(c4["id"], r_score, r_type, size="compact")
+    
+    # Col 5: Defects description
+    c5 = cmd("frame.create", {"parent": row["id"], "width": 275, "height": 34, "props": {"fills": [], "layout": "vertical", "mainAlign": "center"}})
+    make_text(c5["id"], defects, font_size=11, fill=tokens["light/text-sec"], width=265)
+    
+    # Col 6: Status
+    c6 = cmd("frame.create", {"parent": row["id"], "width": 120, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
+    make_text(c6["id"], st_text, font_size=11, font_style="Bold", fill=tokens[f"light/{st_type}-txt"])
+    
+    # Col 7: Action Button
+    c7 = cmd("frame.create", {"parent": row["id"], "width": 110, "height": 32, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "crossAlign": "center"}})
+    make_btn(c7["id"], btn_txt, btn_var, "light", "xs", width=95)
 
 
-# =============================================================================
+# ==============================================================================
+# SCREEN 3: 03_Processing_Light (x=3000, y=0)
+# Центр глубокого анализа: степпер, лог событий ИИ, извлечение сущностей на лету
+# ==============================================================================
+print("\n[3/7] Сборка экрана 03_Processing_Light (Процесс анализа документа в реальном времени)...")
+f3 = cmd("frame.create", {
+    "parent": p3_id, "name": "03_Processing_Light", "x": 3000, "y": 0, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
+f3_id = f3["id"]
+make_app_navbar(f3_id, "Договоры", "Алексей Смирнов", "Юрист")
+
+p_body = cmd("frame.create", {
+    "parent": f3_id, "name": "ProcessingBody", "x": 36, "y": 84, "width": 1368, "height": 870,
+    "props": {"fills": [], "layout": "vertical", "gap": 16}
+})
+
+# Header info card
+doc_info_card = cmd("frame.create", {
+    "parent": p_body["id"], "width": 1368, "height": 72,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "horizontal", "padding": [0, 24, 0, 24], "mainAlign": "spaceBetween", "crossAlign": "center"
+    }
+})
+di_l = cmd("frame.create", {"parent": doc_info_card["id"], "width": 800, "height": 46, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
+make_text(di_l["id"], "Выполняется глубокий ИИ-анализ: Договор_поставки_станков_№48-2026.docx", font_size=16, font_style="Bold", fill=tokens["light/text-main"], width=780)
+make_text(di_l["id"], "8 страниц • 1 420 слов • Контрагент: ООО «ПромМашСервис» • Сумма: 4 850 000 руб.", font_size=12, fill=tokens["light/text-sec"], width=780)
+
+di_r = cmd("frame.create", {"parent": doc_info_card["id"], "width": 450, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
+make_badge(di_r["id"], "GigaChat Enterprise + ГК РФ", "primary", size="regular")
+make_btn(di_r["id"], "Отменить проверку", "secondary", "light", "sm", width=160)
+
+# Progress bar block
+prg_card = cmd("frame.create", {
+    "parent": p_body["id"], "width": 1368, "height": 60,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [12, 24, 12, 24], "gap": 8
+    }
+})
+prg_txt_row = cmd("frame.create", {"parent": prg_card["id"], "width": 1320, "height": 18, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(prg_txt_row["id"], "Прогресс проверки: 82% • Этап 4 из 5 (Сопоставление коллизий разделов)", font_size=12, font_style="Bold", fill=tokens["brand/primary"])
+make_text(prg_txt_row["id"], "Расчетное время завершения: ~12 секунд", font_size=11, fill=tokens["light/text-sec"])
+
+# Track & Fill
+prg_track = cmd("frame.create", {"parent": prg_card["id"], "width": 1320, "height": 8, "props": {"fill": tokens["light/card-tint"], "cornerRadius": 4}})
+cmd("frame.create", {"parent": prg_track["id"], "width": 1082, "height": 8, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4}})
+
+# TWO-COLUMN SCANNER INTERFACE (660px left stepper, 690px right intelligence)
+scan_split = cmd("frame.create", {"parent": p_body["id"], "width": 1368, "height": 700, "props": {"fills": [], "layout": "horizontal", "gap": 18}})
+
+# LEFT: 5 Pipeline Steps (Width 660)
+scan_l = cmd("frame.create", {"parent": scan_split["id"], "width": 660, "height": 700, "props": {"fills": [], "layout": "vertical", "gap": 12}})
+make_text(scan_l["id"], "Этапы пайплайна юридического анализа:", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=660)
+
+steps = [
+    ("✓ 1. Извлечение текста и OCR таблиц", "Распознано 1 420 слов, 8 разделов, реквизиты сторон, 2 подписанта", "safe", "Завершено (0.8с)"),
+    ("✓ 2. Нормативный аудит по ст. 333, 401, 421 ГК РФ", "Сопоставление условий неустойки, форс-мажора и соразмерности", "safe", "Завершено (1.2с)"),
+    ("✓ 3. Сверка с корпоративным Playbook ООО «ТехноСнаб»", "Выявлено 3 отклонения от утвержденных лимитов ответственности", "critical", "3 риска"),
+    ("⟳ 4. Поиск логических противоречий между разделами", "Идет сопоставление: п. 3.2 (оплата 5 дней) vs п. 6.4 (поставка 30 дней)...", "contradiction", "В процессе..."),
+    ("⏳ 5. Генерация протокола разногласий и альтернатив", "Формирование юридически безопасных формулировок для юриста", "warning", "В очереди")
+]
+
+for st_title, st_desc, st_type, st_badge in steps:
+    st_card = cmd("frame.create", {
+        "parent": scan_l["id"], "width": 660, "height": 95,
+        "props": {
+            "fill": tokens["light/card"], "stroke": tokens["light/border"] if st_type != "contradiction" else tokens["light/contra-bdr"],
+            "strokeWeight": 1.5 if st_type == "contradiction" else 1, "cornerRadius": 8, "layout": "vertical", "padding": [12, 16, 12, 16], "gap": 4
+        }
+    })
+    s_hdr = cmd("frame.create", {"parent": st_card["id"], "width": 628, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+    make_text(s_hdr["id"], st_title, font_size=12, font_style="Bold", fill=tokens["light/text-main"] if st_type != "contradiction" else tokens["light/contra-txt"])
+    make_badge(s_hdr["id"], st_badge, st_type, size="compact")
+    make_text(st_card["id"], st_desc, font_size=11, fill=tokens["light/text-sec"], width=628)
+
+# Security pill
+make_badge(scan_l["id"], "🔒 100% On-Premise изоляция: данные не покидают закрытый периметр компании", "safe", size="regular")
+
+# RIGHT: Entity Extraction & AI Stream Terminal (Width 690)
+scan_r = cmd("frame.create", {"parent": scan_split["id"], "width": 690, "height": 700, "props": {"fills": [], "layout": "vertical", "gap": 14}})
+
+# ENTITY MAP CARD
+ent_card = cmd("frame.create", {
+    "parent": scan_r["id"], "width": 690, "height": 280,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [16, 18, 16, 18], "gap": 10
+    }
+})
+eh = cmd("frame.create", {"parent": ent_card["id"], "width": 654, "height": 24, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(eh["id"], "Карта извлеченных сущностей (Entity Extraction):", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
+make_badge(eh["id"], "Извлечено 18 сущностей", "blue", size="compact")
+
+entities = [
+    ("Стороны договора:", "Покупатель: ООО «ТехноСнаб» | Поставщик: ООО «ПромМашСервис» (ИНН 7701234567)"),
+    ("Сумма и валюта:", "4 850 000 руб., в т.ч. НДС 20% • Аванс: 30% (1 455 000 руб.)"),
+    ("Срок оплаты (п. 3.2):", "5 банковских дней с даты выставления счета Поставщика (ДО приемки)"),
+    ("Срок поставки (п. 6.4):", "30 календарных дней с момента аванса • Окончательный расчет после Акта"),
+    ("Штрафные санкции (п. 7.3):", "Пени 5% в день без ограничения Cap (Кабальное условие по ст. 333 ГК РФ)")
+]
+for elab, evalue in entities:
+    erow = cmd("frame.create", {"parent": ent_card["id"], "width": 654, "height": 34, "props": {"fill": tokens["light/card-tint"], "cornerRadius": 4, "layout": "horizontal", "padding": [0, 10, 0, 10], "crossAlign": "center"}})
+    make_text(erow["id"], elab, font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=190)
+    make_text(erow["id"], evalue, font_size=11, fill=tokens["light/text-sec"], width=440)
+
+# LIVE AI EVENT LOG CONSOLE
+log_card = cmd("frame.create", {
+    "parent": scan_r["id"], "width": 690, "height": 330,
+    "props": {
+        "fill": "#1E1E1E", "stroke": "#333333", "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [14, 16, 14, 16], "gap": 6
+    }
+})
+lh = cmd("frame.create", {"parent": log_card["id"], "width": 658, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(lh["id"], "GigaChat AI Live Stream Engine (Телеметрия)", font_size=11, font_style="Bold", fill="#D4D4D4")
+make_text(lh["id"], "● LIVE", font_size=10, font_style="Bold", fill="#4ADE80")
+
+logs = [
+    "[19:42:01.012] INFO: Загрузка файла Договор_поставки_станков_№48-2026.docx завершена.",
+    "[19:42:01.840] OCR: Извлечено 1 420 токенов, структура документа верифицирована.",
+    "[19:42:02.320] SPARK API: Проверка ИНН 7701234567. Индекс благонадежности: 89/100.",
+    "[19:42:03.110] PLAYBOOK: Найдено 3 несоответствия регламенту ООО «ТехноСнаб».",
+    "[19:42:04.450] ВНИМАНИЕ: п. 7.3 содержит неустойку 5%/день. Превышение ст. 333 ГК РФ в 50 раз!",
+    "[19:42:06.120] КОЛЛИЗИЯ: Срок п. 3.2 (5 дней от счета) противоречит п. 6.4 (30 дней от Акта).",
+    "[19:42:07.500] NLP: Генерация безопасной редакции п. 7.3 для протокола разногласий...",
+    "[19:42:08.200] STREAM: Подготовка финального отчета и расчет вероятности снижения неустойки судом (84%)."
+]
+for lmsg in logs:
+    col = "#4ADE80" if "INFO" in lmsg or "OCR" in lmsg else ("#F87171" if "ВНИМАНИЕ" in lmsg else ("#C084FC" if "КОЛЛИЗИЯ" in lmsg else "#D4D4D4"))
+    cmd("node.create", {"type": "text", "parent": log_card["id"], "text": lmsg, "props": {"fontSize": 10, "fontFamily": "Menlo", "fill": col}})
+
+
+# ==============================================================================
 # SCREEN 4: 04_Contract_Analysis_Light (x=4500, y=0)
-# =============================================================================
+# Флагманский инспектор: Redline Diff, судебный предиктор, СПАРК, голосовая заметка
+# ==============================================================================
 print("\n[4/7] Сборка экрана 04_Contract_Analysis_Light (Детальный инспектор договора)...")
-f4 = cmd("frame.create", {"name": "04_Contract_Analysis_Light", "x": 4500, "y": 0, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+f4 = cmd("frame.create", {
+    "parent": p3_id, "name": "04_Contract_Analysis_Light", "x": 4500, "y": 0, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f4_id = f4["id"]
 
-# Sub-Navbar with generous width containers
-v_nav = cmd("frame.create", {"parent": f4_id, "x": 0, "y": 0, "width": 1440, "height": 64, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeBottomWeight": 1, "layout": "horizontal", "padding": [0, 32, 0, 32], "mainAlign": "spaceBetween", "crossAlign": "center"}})
-# vn_l: width 800px
-vn_l = cmd("frame.create", {"parent": v_nav["id"], "width": 800, "height": 40, "props": {"fills": [], "layout": "horizontal", "gap": 16, "crossAlign": "center"}})
-make_btn(vn_l["id"], "← К договорам", "secondary", "light", "sm", width=130)
-make_text(vn_l["id"], "Договор_поставки_станков_№48-2026.docx", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=390)
-make_badge(vn_l["id"], "Критический риск (78/100)", "critical", "light", "regular")
+# Document Sub-navbar
+subnav = cmd("frame.create", {
+    "parent": f4_id, "name": "SubNav", "x": 0, "y": 0, "width": 1440, "height": 60,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "layout": "horizontal", "padding": [0, 36, 0, 36], "mainAlign": "spaceBetween", "crossAlign": "center"
+    }
+})
+sn_l = cmd("frame.create", {"parent": subnav["id"], "width": 520, "height": 36, "props": {"fills": [], "layout": "horizontal", "gap": 12, "crossAlign": "center"}})
+make_btn(sn_l["id"], "← Реестр", "secondary", "light", "sm", width=95)
+make_text(sn_l["id"], "Договор №48-2026 (Поставка)", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=235)
+make_badge(sn_l["id"], "Критический (78/100)", "critical", size="compact")
 
-# vn_r: width 360px
-vn_r = cmd("frame.create", {"parent": v_nav["id"], "width": 360, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
-make_btn(vn_r["id"], "Экспорт в PDF", "secondary", "light", "sm", width=125)
-make_btn(vn_r["id"], "Сформировать протокол", "primary", "light", "sm", width=205)
+# Tabs
+sn_tabs = cmd("frame.create", {"parent": subnav["id"], "width": 370, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 8, "crossAlign": "center"}})
+for tname, is_act, tw in [
+    ("Разметка", True, 85),
+    ("Redline Diff", False, 95),
+    ("Сущности", False, 80),
+    ("Протокол", False, 85)
+]:
+    tb = cmd("frame.create", {
+        "parent": sn_tabs["id"], "width": tw, "height": 28,
+        "props": {
+            "fill": tokens["brand/primary-light"] if is_act else "#00000000",
+            "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"
+        }
+    })
+    cmd("node.create", {"type": "text", "parent": tb["id"], "text": tname, "props": {"fontSize": 11, "fontStyle": "Bold" if is_act else "Regular", "fill": tokens["brand/primary"] if is_act else tokens["light/text-sec"]}})
 
-# Risk Executive Banner (Resilient multi-line height 80px)
-ex_b = cmd("frame.create", {
-    "parent": f4_id, "x": 32, "y": 80, "width": 1376, "height": 80,
+sn_r = cmd("frame.create", {"parent": subnav["id"], "width": 340, "height": 36, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 10, "crossAlign": "center"}})
+make_btn(sn_r["id"], "Экспорт в PDF", "secondary", "light", "sm", width=120)
+make_btn(sn_r["id"], "Сформировать протокол", "primary", "light", "sm", width=195)
+
+# Main container
+a_body = cmd("frame.create", {
+    "parent": f4_id, "name": "AnalysisBody", "x": 36, "y": 74, "width": 1368, "height": 890,
+    "props": {"fills": [], "layout": "vertical", "gap": 12}
+})
+
+# EXECUTIVE SUMMARY BANNER (Archetype 2)
+ex_banner = cmd("frame.create", {
+    "parent": a_body["id"], "width": 1368, "height": 72,
     "props": {
         "fill": tokens["light/crit-bg"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 4, "cornerRadius": 10,
-        "layout": "horizontal", "padding": [14, 20, 14, 20], "crossAlign": "center", "gap": 16
+        "cornerRadius": 8, "layout": "horizontal", "padding": [0, 20, 0, 20], "crossAlign": "center", "gap": 16
     }
 })
-make_badge(ex_b["id"], "КРИТИЧЕСКИЙ РИСК", "critical", "light", "compact")
-ex_txt = cmd("frame.create", {"parent": ex_b["id"], "width": 1150, "height": 52, "props": {"fills": [], "layout": "vertical", "gap": 3, "sizingH": "fill"}})
-make_text(ex_txt["id"], "Резюме ИИ-аналитика: Не рекомендуется к подписанию без протокола разногласий", font_size=13, font_style="Bold", fill=tokens["light/crit-txt"], width=1140)
-make_text(ex_txt["id"], "Выявлена скрытая неустойка 5%/день в п. 7.3 без ограничения ответственности и противоречие сроков оплаты между п. 3.2 (5 дней) и п. 6.4 (30 дней).", font_size=11, fill=tokens["light/text-sec"], width=1140)
+# 4px red strip
+cmd("frame.create", {"parent": ex_banner["id"], "width": 4, "height": 50, "props": {"fill": tokens["light/crit-txt"], "cornerRadius": 2}})
+make_badge(ex_banner["id"], "НЕ ПОДПИСЫВАТЬ", "critical", size="regular")
+eb_txt = cmd("frame.create", {"parent": ex_banner["id"], "width": 1150, "height": 46, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
+make_text(eb_txt["id"], "Резюме для руководства (Дмитрия / Ольги): Выявлена кабальная неустойка 5%/день и критическая коллизия сроков оплаты", font_size=13, font_style="Bold", fill=tokens["light/crit-txt"], width=1140)
+make_text(eb_txt["id"], "Сумма под риском штрафов: 2 425 000 руб. (50% от контракта) • Срок п. 3.2 (5 дней от счета) не совпадает с п. 6.4 (30 дней от Акта). Рекомендация: направить протокол разногласий.", font_size=11, fill=tokens["light/text-sec"], width=1140)
 
-sp = cmd("frame.create", {"parent": f4_id, "x": 32, "y": 172, "width": 1376, "height": 760, "props": {"fills": [], "layout": "horizontal", "gap": 18, "sizingH": "fixed"}})
+# TWO-COLUMN SPLIT (670px Left Contract Text + Voice Note, 680px Right Inspector + SPARK)
+split_row = cmd("frame.create", {"parent": a_body["id"], "width": 1368, "height": 790, "props": {"fills": [], "layout": "horizontal", "gap": 18}})
 
-# Left: Document Clause Viewer (Wrapped Clauses)
-dv = cmd("frame.create", {"parent": sp["id"], "width": 640, "height": 760, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 12, "layout": "vertical", "padding": 20, "gap": 12, "sizingH": "fixed"}})
-dv_h = cmd("frame.create", {"parent": dv["id"], "width": 600, "height": 26, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_text(dv_h["id"], "Текст договора (Страница 2 из 6)", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=400)
-make_badge(dv_h["id"], "Подсветка активна", "primary", "light", "compact")
+# LEFT COLUMN: Contract text with highlighted clauses + Voice note
+c_left = cmd("frame.create", {
+    "parent": split_row["id"], "width": 670, "height": 790,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [16, 20, 16, 20], "gap": 10
+    }
+})
+cl_hdr = cmd("frame.create", {"parent": c_left["id"], "width": 630, "height": 26, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(cl_hdr["id"], "Текст договора (Страница 2 из 6) • Интерактивная разметка", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
+make_badge(cl_hdr["id"], "Подсветка активна", "primary", size="compact")
 
-db = cmd("frame.create", {"parent": dv["id"], "width": 600, "height": 680, "props": {"fills": [], "layout": "vertical", "gap": 12, "sizingH": "fill"}})
-make_text(db["id"], "3. ПОРЯДОК РАСЧЕТОВ И СТОИМОСТЬ", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=570)
-make_text(db["id"], "3.1. Общая стоимость оборудования составляет 4 850 000 руб., вкл. НДС 20%.", font_size=12, fill=tokens["light/text-sec"], width=570)
+# Contract body clauses
+make_text(c_left["id"], "3. ПОРЯДОК РАСЧЕТОВ И СТОИМОСТЬ ОБОРУДОВАНИЯ", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=630)
+make_text(c_left["id"], "3.1. Общая стоимость оборудования составляет 4 850 000 руб., в т.ч. НДС 20%.", font_size=11, fill=tokens["light/text-sec"], width=630)
 
-# Clause 3.2 (Wrapped onto 2 lines, height 65)
-p32 = cmd("frame.create", {
-    "parent": db["id"], "width": 600, "height": 65,
+# Highlight clause 3.2 (Purple contradiction)
+c32 = cmd("frame.create", {
+    "parent": c_left["id"], "width": 630, "height": 55,
     "props": {
         "fill": tokens["light/contra-bg"], "stroke": tokens["light/contra-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 3, "cornerRadius": 6,
-        "layout": "vertical", "padding": [10, 12, 10, 12], "sizingH": "fill"
+        "cornerRadius": 6, "layout": "vertical", "padding": [8, 12, 8, 12], "gap": 2
     }
 })
-make_text(p32["id"], "п. 3.2. Оплата производится Покупателем в течение 5 (пяти) банковских дней с даты счета Поставщика.", font_size=12, font_style="Bold", fill=tokens["light/contra-txt"], width=560)
+make_text(c32["id"], "п. 3.2. Оплата производится Покупателем в течение 5 (пяти) банковских дней с даты счета Поставщика.", font_size=11, font_style="Bold", fill=tokens["light/contra-txt"], width=606)
+make_text(c32["id"], "⚠️ Логическая коллизия со сроком окончательного расчета в п. 6.4 (разрыв 25 дней)", font_size=10, fill=tokens["light/text-sec"], width=606)
 
-make_text(db["id"], "4. УСЛОВИЯ И СРОКИ ПОСТАВКИ ТОВАРА\n4.1. Поставка осуществляется в течение 20 рабочих дней с момента аванса.", font_size=12, fill=tokens["light/text-sec"], width=570)
+make_text(c_left["id"], "4. УСЛОВИЯ И СРОКИ ПОСТАВКИ ТОВАРА", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=630)
+make_text(c_left["id"], "4.1. Поставка осуществляется в течение 20 рабочих дней с момента выплаты аванса.", font_size=11, fill=tokens["light/text-sec"], width=630)
 
-# Clause 6.4 (Wrapped onto 2 lines, height 65)
-p64 = cmd("frame.create", {
-    "parent": db["id"], "width": 600, "height": 65,
+# Highlight clause 6.4 (Purple contradiction)
+c64 = cmd("frame.create", {
+    "parent": c_left["id"], "width": 630, "height": 55,
     "props": {
         "fill": tokens["light/contra-bg"], "stroke": tokens["light/contra-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 3, "cornerRadius": 6,
-        "layout": "vertical", "padding": [10, 12, 10, 12], "sizingH": "fill"
+        "cornerRadius": 6, "layout": "vertical", "padding": [8, 12, 8, 12], "gap": 2
     }
 })
-make_text(p64["id"], "п. 6.4. Окончательный расчет осуществляется в течение 30 календарных дней после подписания Акта.", font_size=12, font_style="Bold", fill=tokens["light/contra-txt"], width=560)
+make_text(c64["id"], "п. 6.4. Окончательный расчет осуществляется в течение 30 календарных дней после подписания Акта.", font_size=11, font_style="Bold", fill=tokens["light/contra-txt"], width=606)
+make_text(c64["id"], "⚠️ Противоречит п. 3.2, требующему оплату до поставки оборудования по счету", font_size=10, fill=tokens["light/text-sec"], width=606)
 
-make_text(db["id"], "7. ОТВЕТСТВЕННОСТЬ СТОРОН", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=570)
+make_text(c_left["id"], "7. ОТВЕТСТВЕННОСТЬ СТОРОН", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=630)
 
-# Clause 7.3 (Wrapped onto 3 lines, height 85)
-p73 = cmd("frame.create", {
-    "parent": db["id"], "width": 600, "height": 85,
+# Highlight clause 7.3 (Red critical with Redline diff strike)
+c73 = cmd("frame.create", {
+    "parent": c_left["id"], "width": 630, "height": 72,
     "props": {
         "fill": tokens["light/crit-bg"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 4, "cornerRadius": 6,
-        "layout": "vertical", "padding": [10, 12, 10, 12], "sizingH": "fill"
+        "cornerRadius": 6, "layout": "vertical", "padding": [8, 12, 8, 12], "gap": 3
     }
 })
-make_text(p73["id"], "п. 7.3. В случае нарушения сроков поставки Поставщик уплачивает штраф 5% от суммы Договора за каждый день просрочки без ограничения предельной суммы.", font_size=12, font_style="Bold", fill=tokens["light/crit-txt"], width=560)
+make_text(c73["id"], "п. 7.3. В случае нарушения сроков поставки Поставщик уплачивает штраф 5% от суммы Договора за каждый день просрочки без ограничения предельной суммы.", font_size=11, font_style="Bold", fill=tokens["light/crit-txt"], width=606)
+make_text(c73["id"], "🛑 Redline: [Исключить 5% без лимита] → [Заменить на 0.1%/день, предел Cap не более 10% по ст. 333 ГК РФ]", font_size=10, font_style="Bold", fill=tokens["brand/primary"], width=606)
 
-# Right: AI Inspector
-insp = cmd("frame.create", {"parent": sp["id"], "width": 718, "height": 760, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 12, "layout": "vertical", "padding": 18, "gap": 14, "sizingH": "fixed"}})
-make_text(insp["id"], "Инспектор рисков и рекомендации ИИ", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=680)
-
-t_tabs = cmd("frame.create", {"parent": insp["id"], "width": 682, "height": 32, "props": {"fills": [], "layout": "horizontal", "gap": 8, "sizingH": "fill"}})
-make_badge(t_tabs["id"], "Все замечания (5)", "primary", "light", "regular")
-make_badge(t_tabs["id"], "Критические риски (3)", "critical", "light", "regular")
-make_badge(t_tabs["id"], "Коллизии пунктов (2)", "contradiction", "light", "regular")
-
-# Risk Card 1 (Height 305px to comfortably fit all 2-line wraps)
-rc1 = cmd("frame.create", {
-    "parent": insp["id"], "width": 682, "height": 305,
+# VOICE NOTE WIDGET (From Story Map backlog: Голосовой ввод заметок)
+vn_card = cmd("frame.create", {
+    "parent": c_left["id"], "width": 630, "height": 74,
     "props": {
-        "fill": tokens["light/card-subtle"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 4, "cornerRadius": 10,
-        "layout": "vertical", "padding": 14, "gap": 8, "sizingH": "fill"
+        "fill": tokens["light/card-warm"], "stroke": tokens["brand/primary"], "strokeWeight": 1,
+        "cornerRadius": 8, "layout": "vertical", "padding": [8, 12, 8, 12], "gap": 4
     }
 })
-rc1_h = cmd("frame.create", {"parent": rc1["id"], "width": 654, "height": 24, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_badge(rc1_h["id"], "КРИТИЧЕСКИЙ РИСК • п. 7.3", "critical", "light", "compact")
-make_text(rc1_h["id"], "Оценка риска: 95/100", font_size=12, font_style="Bold", fill=tokens["light/crit-txt"], width=170)
-make_text(rc1["id"], "Несоразмерная неустойка (5%/день) без ограничения ответственности", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=640)
-make_text(rc1["id"], "Комментарий: Ставка 5%/день превышает среднерыночную в 50 раз (ст. 333 ГК РФ). При просрочке на 20 дней штраф превысит сумму всего оборудования.", font_size=11, fill=tokens["light/text-sec"], width=640)
+vnh = cmd("frame.create", {"parent": vn_card["id"], "width": 606, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(vnh["id"], "🎙 Голосовая заметка: Алексей Смирнов (Ведущий юрист)", font_size=11, font_style="Bold", fill=tokens["brand/primary"])
+make_text(vnh["id"], "▶ 0:18 / 0:35 • Распознано ИИ", font_size=10, fill=tokens["light/text-sec"])
+make_text(vn_card["id"], "«Обязательно согласовать лимит неустойки 10% с финдиректором и привязать оплату исключительно к Акту приемки, исключив оплату по счету.»", font_size=10, fill=tokens["light/text-main"], width=606)
 
-# AI Safe Clause Quote Box (Height 85px)
-ai_box = cmd("frame.create", {
-    "parent": rc1["id"], "width": 654, "height": 85,
+
+# RIGHT COLUMN: AI Risk Inspector, SPARK counterparty, Judicial Predictor
+c_right = cmd("frame.create", {
+    "parent": split_row["id"], "width": 680, "height": 790,
     "props": {
-        "fill": tokens["light/brand-tint"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 3, "cornerRadius": 6,
-        "layout": "vertical", "padding": [8, 12, 8, 12], "gap": 4, "sizingH": "fill"
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [16, 20, 16, 20], "gap": 10
     }
 })
-make_text(ai_box["id"], "Безопасная редакция ИИ (для протокола разногласий):", font_size=11, font_style="Bold", fill=tokens["brand/primary"], width=620)
-make_text(ai_box["id"], "«...пеня в размере 0.1% от стоимости непоставленного Товара за каждый день просрочки, но не более 10% от общей суммы Договора.»", font_size=11, fill=tokens["light/text-main"], width=620)
 
-r_acts = cmd("frame.create", {"parent": rc1["id"], "width": 654, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center", "sizingH": "fill"}})
-make_btn(r_acts["id"], "Принять правку ИИ", "primary", "light", "sm", width=160)
-make_btn(r_acts["id"], "Редактировать", "secondary", "light", "sm", width=125)
-make_btn(r_acts["id"], "Отклонить", "danger", "light", "sm", width=100)
+# Counterparty Intelligence widget (СПАРК / Мой Арбитр)
+spark_card = cmd("frame.create", {
+    "parent": c_right["id"], "width": 640, "height": 48,
+    "props": {
+        "fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 6, "layout": "horizontal", "padding": [0, 14, 0, 14], "mainAlign": "spaceBetween", "crossAlign": "center"
+    }
+})
+sp_l = cmd("frame.create", {"parent": spark_card["id"], "width": 460, "height": 36, "props": {"fills": [], "layout": "vertical", "mainAlign": "center"}})
+make_text(sp_l["id"], "Контрагент: ООО «ПромМашСервис» (ИНН 7701234567)", font_size=11, font_style="Bold", fill=tokens["light/text-main"])
+make_text(sp_l["id"], "СПАРК: 89/100 • 2 открытых судебных иска в Арбитражном суде г. Москвы на 1.4 млн ₽", font_size=10, fill=tokens["light/text-sec"])
+make_badge(spark_card["id"], "Кадастр: 2 иска", "warning", size="compact")
 
-# Risk Card 2 (Contradiction, Height 155px)
-rc2 = cmd("frame.create", {
-    "parent": insp["id"], "width": 682, "height": 155,
+# Filter chips in Inspector
+cr_hdr = cmd("frame.create", {"parent": c_right["id"], "width": 640, "height": 30, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
+make_badge(cr_hdr["id"], "Все замечания (5)", "primary", size="compact")
+make_badge(cr_hdr["id"], "Критические риски (3)", "critical", size="compact")
+make_badge(cr_hdr["id"], "Коллизии пунктов (2)", "contradiction", size="compact")
+
+# DETAILED RISK CARD: Clause 7.3 (ст. 333 ГК РФ)
+rcard1 = cmd("frame.create", {
+    "parent": c_right["id"], "width": 640, "height": 260,
+    "props": {
+        "fill": tokens["light/crit-bg"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1.5,
+        "cornerRadius": 8, "layout": "vertical", "padding": [12, 14, 12, 14], "gap": 8
+    }
+})
+r1_hdr = cmd("frame.create", {"parent": rcard1["id"], "width": 612, "height": 24, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_badge(r1_hdr["id"], "КРИТИЧЕСКИЙ РИСК • п. 7.3", "critical", size="compact")
+make_text(r1_hdr["id"], "Оценка риска: 95/100", font_size=12, font_style="Bold", fill=tokens["light/crit-txt"])
+
+make_text(rcard1["id"], "Несоразмерная неустойка (5%/день) без ограничения ответственности", font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=612)
+make_text(rcard1["id"], "Комментарий ИИ: Ставка 5%/день превышает среднерыночную ставку по ст. 395 ГК РФ более чем в 50 раз (ст. 333 ГК РФ, Постановление Пленума ВС РФ № 7). При просрочке на 20 дней штраф превысит сумму всего договора.", font_size=11, fill=tokens["light/text-sec"], width=612)
+
+# Judicial Risk Predictor pill
+j_pill = cmd("frame.create", {"parent": rcard1["id"], "width": 612, "height": 24, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 4, "layout": "horizontal", "padding": [0, 8, 0, 8], "crossAlign": "center"}})
+make_text(j_pill["id"], "⚖️ Судебный предиктор: Вероятность снижения неустойки судом по ст. 333 ГК РФ — 84%", font_size=10, font_style="Bold", fill=tokens["brand/primary"])
+
+# AI Quote Box (Archetype 4)
+quote_box = cmd("frame.create", {
+    "parent": rcard1["id"], "width": 612, "height": 55,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["brand/primary"], "strokeWeight": 1,
+        "cornerRadius": 6, "layout": "vertical", "padding": [6, 12, 6, 12], "gap": 2
+    }
+})
+make_text(quote_box["id"], "Безопасная редакция ИИ (для протокола разногласий):", font_size=10, font_style="Bold", fill=tokens["brand/primary"])
+make_text(quote_box["id"], "«...пени в размере 0.1% от стоимости непоставленного Товара за каждый день просрочки, но не более 10% от общей суммы Договора.»", font_size=10, fill=tokens["light/text-main"], width=588)
+
+# Action Buttons
+r1_btns = cmd("frame.create", {"parent": rcard1["id"], "width": 612, "height": 34, "props": {"fills": [], "layout": "horizontal", "gap": 10}})
+make_btn(r1_btns["id"], "Принять правку ИИ", "primary", "light", "sm", width=175)
+make_btn(r1_btns["id"], "Редактировать формулировку", "secondary", "light", "sm", width=225)
+make_btn(r1_btns["id"], "В протокол .DOCX", "secondary", "light", "sm", width=180)
+
+# DETAILED CONTRADICTION CARD: Clauses 3.2 vs 6.4
+rcard2 = cmd("frame.create", {
+    "parent": c_right["id"], "width": 640, "height": 130,
     "props": {
         "fill": tokens["light/contra-bg"], "stroke": tokens["light/contra-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 3, "cornerRadius": 10,
-        "layout": "vertical", "padding": 12, "gap": 6, "sizingH": "fill"
+        "cornerRadius": 8, "layout": "vertical", "padding": [12, 14, 12, 14], "gap": 4
     }
 })
-rc2_h = cmd("frame.create", {"parent": rc2["id"], "width": 654, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_badge(rc2_h["id"], "КОЛЛИЗИЯ ПУНКТОВ • п. 3.2 vs п. 6.4", "contradiction", "light", "compact")
-make_text(rc2_h["id"], "Сроки оплаты", font_size=11, font_style="Bold", fill=tokens["light/contra-txt"], width=130)
-make_text(rc2["id"], "Внутреннее противоречие: п. 3.2 требует оплату за 5 дней, а п. 6.4 указывает 30 дней", font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=640)
-make_text(rc2["id"], "Рекомендация: Синхронизировать единый срок окончательного расчета до 15 календарных дней.", font_size=11, fill=tokens["light/text-sec"], width=640)
+r2_hdr = cmd("frame.create", {"parent": rcard2["id"], "width": 612, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_badge(r2_hdr["id"], "КОЛЛИЗИЯ ПУНКТОВ • п. 3.2 vs п. 6.4", "contradiction", size="compact")
+make_text(r2_hdr["id"], "Сроки и порядок оплаты", font_size=11, font_style="Bold", fill=tokens["light/contra-txt"])
+make_text(rcard2["id"], "Внутреннее логическое противоречие: п. 3.2 требует оплату за 5 дней до отгрузки, а п. 6.4 устанавливает окончательный расчет через 30 дней после Акта.", font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=612)
+make_text(rcard2["id"], "Решение ИИ: Синхронизировать единый срок окончательного расчета: 15 банковских дней с момента подписания Акта приема-передачи оборудования.", font_size=10, fill=tokens["light/text-sec"], width=612)
+make_btn(rcard2["id"], "Синхронизировать сроки в тексте договора →", "secondary", "light", "xs", width=612)
 
 
-# =============================================================================
+# ==============================================================================
 # SCREEN 5: 05_Risk_Analytics_Light (x=0, y=1040)
-# =============================================================================
+# Сводная аналитика рисков, матрица рисков по типам, отчет для руководства
+# ==============================================================================
 print("\n[5/7] Сборка экрана 05_Risk_Analytics_Light (Аналитика рисков компании)...")
-f5 = cmd("frame.create", {"name": "05_Risk_Analytics_Light", "x": 0, "y": 1040, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+f5 = cmd("frame.create", {
+    "parent": p3_id, "name": "05_Risk_Analytics_Light", "x": 0, "y": 1040, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f5_id = f5["id"]
-make_app_navbar(f5_id, "Аналитика рисков")
+make_app_navbar(f5_id, "Аналитика рисков", "Ольга Николаева", "Руководитель")
 
-body5 = cmd("frame.create", {"parent": f5_id, "name": "AnalyticsBody", "x": 36, "y": 88, "width": 1368, "height": 840, "props": {"fills": [], "layout": "vertical", "gap": 18, "sizingH": "fixed"}})
+body5 = cmd("frame.create", {"parent": f5_id, "name": "AnalyticsBody", "x": 36, "y": 84, "width": 1368, "height": 870, "props": {"fills": [], "layout": "vertical", "gap": 16}})
 
-# Filter & Report Header with generous container width 430px
-f5_bar = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 45, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_text(f5_bar["id"], "Сводная аналитика рисков юридического департамента", font_size=18, font_style="Bold", fill=tokens["light/text-main"], width=700)
-# f5_r: width 460, height 40
-f5_r = cmd("frame.create", {"parent": f5_bar["id"], "width": 460, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
+# Filter & Report Header
+f5_bar = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 45, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(f5_bar["id"], "Сводная аналитика рисков юридического департамента", font_size=20, font_style="Bold", fill=tokens["light/text-main"], width=700)
+f5_r = cmd("frame.create", {"parent": f5_bar["id"], "width": 480, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
 make_btn(f5_r["id"], "Период: Октябрь 2026", "secondary", "light", "sm", width=180)
-make_btn(f5_r["id"], "Экспорт отчета руководству", "primary", "light", "sm", width=230)
+make_btn(f5_r["id"], "Экспорт отчета Совету директоров", "primary", "light", "sm", width=250)
 
-# 4 KPI cards (Archetype 1)
-kpi_row5 = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 95, "props": {"fills": [], "layout": "horizontal", "gap": 16, "sizingH": "fill"}})
-for kt, kv, ks, ktype, top_color, badge_text in [
+# 4 KPI cards
+kpi_row5 = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 96, "props": {"fills": [], "layout": "horizontal", "gap": 16}})
+kpis5 = [
     ("Сэкономлено рабочих часов", "142 часа", "Равносильно 0.9 ставки юриста", "safe", tokens["brand/primary"], "Эффективность"),
     ("Предотвращено штрафов", "18.4 млн ₽", "По 14 договорам с неограниченным cap", "critical", tokens["light/crit-txt"], "Защита активов"),
     ("Устранено логических коллизий", "29 коллизий", "Исключен риск судебных споров по срокам", "contradiction", tokens["light/contra-txt"], "Коллизии"),
-    ("Договоров без замечаний", "34% от общего числа", "Согласованы с первого раза без разногласий", "safe", tokens["light/safe-txt"], "Согласовано")
-]:
-    kc = cmd("frame.create", {
-        "parent": kpi_row5["id"], "width": 330, "height": 95,
+    ("Согласовано без правок", "34% договоров", "Типовые формы без единого риска", "safe", tokens["light/safe-txt"], "Согласовано")
+]
+for kt, kv, ks, ktype, top_color, badge_text in kpis5:
+    card = cmd("frame.create", {
+        "parent": kpi_row5["id"], "width": 330, "height": 96,
         "props": {
             "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-            "strokeTopWeight": 3, "cornerRadius": 10, "layout": "vertical", "padding": [12, 16, 12, 16], "gap": 4, "sizingH": "fill"
+            "cornerRadius": 10, "layout": "vertical", "padding": [0, 18, 14, 18], "gap": 6
         }
     })
-    kc_top = cmd("frame.create", {"parent": kc["id"], "width": 298, "height": 20, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-    make_text(kc_top["id"], kt, font_size=11, fill=tokens["light/text-sec"], width=190)
-    make_badge(kc_top["id"], badge_text, ktype, "light", "compact")
-    make_text(kc["id"], kv, font_size=20, font_style="Bold", fill=top_color, width=298)
-    make_text(kc["id"], ks, font_size=11, fill=tokens["light/text-muted"], width=298)
+    cmd("frame.create", {"parent": card["id"], "width": 330, "height": 4, "props": {"fill": top_color, "cornerRadius": 2}})
+    chdr = cmd("frame.create", {"parent": card["id"], "width": 294, "height": 22, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+    make_text(chdr["id"], kt, font_size=11, font_style="Bold", fill=tokens["light/text-sec"])
+    make_badge(chdr["id"], badge_text, ktype, size="compact")
+    make_text(card["id"], kv, font_size=20, font_style="Bold", fill=tokens["light/text-main"])
+    make_text(card["id"], ks, font_size=11, fill=tokens["light/text-muted"])
 
-# 2 Charts Split row
-charts_row = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 380, "props": {"fills": [], "layout": "horizontal", "gap": 18, "sizingH": "fill"}})
+# Two Infographic Blocks (670px left distribution, 680px right matrix + weekly volume)
+f5_charts = cmd("frame.create", {"parent": body5["id"], "width": 1368, "height": 410, "props": {"fills": [], "layout": "horizontal", "gap": 18}})
 
-# Left Chart: Risk Distribution by Category
-c1 = cmd("frame.create", {
-    "parent": charts_row["id"], "width": 675, "height": 380,
+# Left: Risk Categories Bar Chart
+c_card1 = cmd("frame.create", {
+    "parent": f5_charts["id"], "width": 670, "height": 410,
     "props": {
         "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 20, "gap": 16, "sizingH": "fill"
+        "cornerRadius": 10, "layout": "vertical", "padding": [20, 24, 20, 24], "gap": 14
     }
 })
-make_text(c1["id"], "Распределение выявленных рисков по категориям", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=635)
-bars_box = cmd("frame.create", {"parent": c1["id"], "width": 635, "height": 280, "props": {"fills": [], "layout": "vertical", "gap": 14}})
-for cat_name, cat_pct, cat_count, cat_clr in [
-    ("Неустойки и неограниченная ответственность (ст. 333 ГК РФ)", 42, "62 случая", tokens["light/crit-txt"]),
-    ("Логические противоречия сроков и условий оплаты", 28, "41 случай", tokens["light/contra-txt"]),
-    ("Неблагоприятная территориальная подсудность контрагента", 16, "24 случая", tokens["light/warn-txt"]),
-    ("Одностороннее изменение цен и объемов поставки", 9, "13 случаев", tokens["light/warn-txt"]),
-    ("Нарушение правил конфиденциальности и NDA", 5, "8 случаев", tokens["brand/primary"])
-]:
-    brow = cmd("frame.create", {"parent": bars_box["id"], "width": 635, "height": 40, "props": {"fills": [], "layout": "vertical", "gap": 4}})
-    blbl = cmd("frame.create", {"parent": brow["id"], "width": 635, "height": 18, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween"}})
-    make_text(blbl["id"], cat_name, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=480)
-    make_text(blbl["id"], f"{cat_pct}% ({cat_count})", font_size=12, fill=tokens["light/text-sec"], width=130, textAlign="right")
-    bg_bar = cmd("frame.create", {"parent": brow["id"], "width": 635, "height": 8, "props": {"fill": tokens["light/card-subtle"], "cornerRadius": 4}})
-    cmd("frame.create", {"parent": bg_bar["id"], "width": int(635 * cat_pct / 100), "height": 8, "props": {"fill": cat_clr, "cornerRadius": 4}})
+make_text(c_card1["id"], "Распределение выявленных рисков по категориям:", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=620)
 
-# Right Chart: Weekly Volume & Speed
-c2 = cmd("frame.create", {
-    "parent": charts_row["id"], "width": 675, "height": 380,
+cat_bars = [
+    ("Неустойки и ответственность (ст. 333 ГК РФ)", "42% (62 случая)", 250, tokens["light/crit-txt"]),
+    ("Логические противоречия сроков и оплат", "28% (41 случай)", 168, tokens["light/contra-txt"]),
+    ("Неблагоприятная территориальная подсудность", "16% (24 случая)", 96, tokens["brand/primary"]),
+    ("Одностороннее изменение цен и объемов", "9% (13 случаев)", 54, tokens["light/warn-txt"]),
+    ("Нарушение конфиденциальности и коммерческой тайны", "5% (8 случаев)", 30, tokens["light/safe-txt"])
+]
+for cat_name, cat_val, bar_w, bar_c in cat_bars:
+    crow = cmd("frame.create", {"parent": c_card1["id"], "width": 622, "height": 42, "props": {"fills": [], "layout": "vertical", "gap": 4}})
+    ctx = cmd("frame.create", {"parent": crow["id"], "width": 622, "height": 18, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween"}})
+    make_text(ctx["id"], cat_name, font_size=11, font_style="Bold", fill=tokens["light/text-main"])
+    make_text(ctx["id"], cat_val, font_size=11, fill=tokens["light/text-sec"])
+    tr = cmd("frame.create", {"parent": crow["id"], "width": 622, "height": 8, "props": {"fill": tokens["light/card-tint"], "cornerRadius": 4}})
+    cmd("frame.create", {"parent": tr["id"], "width": bar_w * 2, "height": 8, "props": {"fill": bar_c, "cornerRadius": 4}})
+
+# Right: Risk Heatmap by Contract Type + Weekly Column Chart
+c_card2 = cmd("frame.create", {
+    "parent": f5_charts["id"], "width": 680, "height": 410,
     "props": {
         "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 20, "gap": 16, "sizingH": "fill"
+        "cornerRadius": 10, "layout": "vertical", "padding": [20, 24, 20, 24], "gap": 12
     }
 })
-make_text(c2["id"], "Динамика проверок по дням недели и нагрузка юристов", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=635)
-week_cols = cmd("frame.create", {"parent": c2["id"], "width": 635, "height": 220, "props": {"fills": [], "layout": "horizontal", "gap": 22, "mainAlign": "center", "crossAlign": "max"}})
-for day_name, d_count, d_h in [("Пн", 28, 140), ("Вт", 36, 180), ("Ср", 32, 160), ("Чт", 40, 200), ("Пт", 24, 120), ("Сб", 6, 30), ("Вс", 2, 10)]:
-    dcol = cmd("frame.create", {"parent": week_cols["id"], "width": 65, "height": 210, "props": {"fills": [], "layout": "vertical", "crossAlign": "center", "gap": 8, "mainAlign": "max"}})
-    make_text(dcol["id"], str(d_count), font_size=12, font_style="Bold", fill=tokens["brand/primary"])
-    bar_pillar = cmd("frame.create", {"parent": dcol["id"], "width": 44, "height": d_h, "props": {"fill": tokens["brand/primary"], "cornerRadius": [6, 6, 0, 0]}})
-    if "brand/primary" in var_ids: bind(bar_pillar["id"], "fill", "brand/primary")
-    make_text(dcol["id"], day_name, font_size=12, fill=tokens["light/text-sec"])
+make_text(c_card2["id"], "Матрица рисков по типам договоров и недельная динамика:", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=630)
 
-make_text(c2["id"], "Пиковая нагрузка: Четверг (40 договоров). Среднее время проверки стабильно < 1.4 мин.", font_size=12, fill=tokens["light/text-muted"], width=635, textAlign="center")
+# Heatmap pills
+hm_box = cmd("frame.create", {"parent": c_card2["id"], "width": 632, "height": 60, "props": {"fills": [], "layout": "horizontal", "gap": 8}})
+hm_types = [
+    ("Поставка", "78% риск", "critical", 120),
+    ("Аренда", "65% риск", "warning", 115),
+    ("Подряд", "45% риск", "warning", 115),
+    ("Услуги", "22% риск", "safe", 115),
+    ("NDA", "08% риск", "safe", 125)
+]
+for ht_name, ht_risk, ht_type, hw in hm_types:
+    hb = cmd("frame.create", {"parent": hm_box["id"], "width": hw, "height": 55, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "gap": 4}})
+    cmd("node.create", {"type": "text", "parent": hb["id"], "text": ht_name, "props": {"fontSize": 11, "fontStyle": "Bold", "fill": tokens["light/text-main"]}})
+    make_badge(hb["id"], ht_risk, ht_type, size="compact")
 
-# Bottom Table: Lawyers Workload
-low_table = cmd("frame.create", {
-    "parent": body5["id"], "width": 1368, "height": 260,
+# Column Chart: Days of Week
+make_text(c_card2["id"], "Динамика проверок по дням недели (пик в четверг — 40 договоров):", font_size=12, font_style="Bold", fill=tokens["light/text-sec"], width=630)
+col_chart = cmd("frame.create", {"parent": c_card2["id"], "width": 632, "height": 190, "props": {"fills": [], "layout": "horizontal", "gap": 22, "crossAlign": "max", "padding": [0, 20, 0, 20]}})
+days_data = [("Пн", 28, 90), ("Вт", 36, 120), ("Ср", 32, 105), ("Чт", 40, 140), ("Пт", 24, 80), ("Сб", 6, 25), ("Вс", 2, 12)]
+for d_name, d_cnt, col_h in days_data:
+    d_col = cmd("frame.create", {"parent": col_chart["id"], "width": 60, "height": col_h + 35, "props": {"fills": [], "layout": "vertical", "crossAlign": "center", "gap": 4}})
+    make_text(d_col["id"], str(d_cnt), font_size=10, font_style="Bold", fill=tokens["brand/primary"])
+    cmd("frame.create", {"parent": d_col["id"], "width": 44, "height": col_h, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4}})
+    make_text(d_col["id"], d_name, font_size=11, fill=tokens["light/text-sec"])
+
+# Team Productivity Table
+t_perf = cmd("frame.create", {
+    "parent": body5["id"], "width": 1368, "height": 220,
     "props": {
         "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 18, "gap": 8, "sizingH": "fill"
+        "cornerRadius": 10, "layout": "vertical", "clip": True
     }
 })
-make_text(low_table["id"], "Эффективность команды юристов за текущий месяц", font_size=15, font_style="Bold", fill=tokens["light/text-main"], width=1332)
-lt_h = cmd("frame.create", {"parent": low_table["id"], "width": 1332, "height": 32, "props": {"fill": tokens["light/card-subtle"], "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center"}})
-for lt_t, lt_w in [("Сотрудник", 300), ("Роль", 200), ("Проверено договоров", 220), ("Принято правок ИИ", 220), ("Средняя оценка риска", 200), ("Статус нагрузки", 180)]:
-    make_text(lt_h["id"], lt_t, font_size=12, font_style="Bold", fill=tokens["light/text-sec"], width=lt_w)
+tp_hdr = cmd("frame.create", {"parent": t_perf["id"], "width": 1368, "height": 38, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1, "layout": "horizontal", "padding": [0, 24, 0, 24], "crossAlign": "center"}})
+make_text(tp_hdr["id"], "Сотрудник и специализация", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=320)
+make_text(tp_hdr["id"], "Проверено договоров", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=240)
+make_text(tp_hdr["id"], "Принято правок ИИ", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=240)
+make_text(tp_hdr["id"], "Средняя оценка риска", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=240)
+make_text(tp_hdr["id"], "Статус нагрузки юриста", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=240)
 
-for emp_name, emp_role, emp_cnt, emp_accepted, emp_score, emp_status in [
-    ("Алексей Смирнов", "Ведущий юрист (Поставки)", "74 договора", "92% правок принято", "Высокий риск (64%)", "Оптимальная (3.2 ч/день)"),
-    ("Елена Васильева", "Юрист (Аренда и услуги)", "48 договоров", "88% правок принято", "Средний риск (38%)", "Оптимальная (2.1 ч/день)"),
-    ("Михаил Рогов", "Младший юрист (NDA)", "26 договоров", "96% правок принято", "Низкий риск (18%)", "Доступен для задач")
-]:
-    ltr = cmd("frame.create", {"parent": low_table["id"], "width": 1332, "height": 45, "props": {"fills": [], "stroke": tokens["light/border"], "strokeBottomWeight": 1, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center"}})
-    make_text(ltr["id"], emp_name, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=300)
-    make_text(ltr["id"], emp_role, font_size=12, fill=tokens["light/text-sec"], width=200)
-    make_text(ltr["id"], emp_cnt, font_size=12, fill=tokens["light/text-main"], width=220)
-    make_text(ltr["id"], emp_accepted, font_size=12, font_style="Bold", fill=tokens["light/safe-txt"], width=220)
-    make_text(ltr["id"], emp_score, font_size=12, fill=tokens["light/text-sec"], width=200)
-    make_text(ltr["id"], emp_status, font_size=12, fill=tokens["light/text-muted"], width=180)
+team_stats = [
+    ("Алексей Смирнов • Ведущий юрист (Поставка)", "74 договора", "92% правок принято", "Высокий риск (64/100)", "Оптимальная (3.2 ч/день)"),
+    ("Елена Васильева • Юрист (Аренда и услуги)", "48 договоров", "88% правок принято", "Средний риск (38/100)", "Оптимальная (2.1 ч/день)"),
+    ("Михаил Рогов • Младший юрист (NDA и подряд)", "26 договоров", "96% правок принято", "Низкий риск (18/100)", "Доступен для новых задач")
+]
+for t_name, t_cnt, t_app, t_risk, t_load in team_stats:
+    trow = cmd("frame.create", {"parent": t_perf["id"], "width": 1368, "height": 55, "props": {"fills": [], "stroke": tokens["light/border-subtle"], "strokeWeight": 1, "layout": "horizontal", "padding": [0, 24, 0, 24], "crossAlign": "center"}})
+    make_text(trow["id"], t_name, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=320)
+    make_text(trow["id"], t_cnt, font_size=12, fill=tokens["light/text-main"], width=240)
+    make_text(trow["id"], t_app, font_size=12, font_style="Bold", fill=tokens["light/safe-txt"], width=240)
+    make_text(trow["id"], t_risk, font_size=12, fill=tokens["light/text-sec"], width=240)
+    make_text(trow["id"], t_load, font_size=12, fill=tokens["light/text-sec"], width=240)
 
 
-# =============================================================================
+# ==============================================================================
 # SCREEN 6: 06_Corporate_Playbook_Light (x=1500, y=1040)
-# =============================================================================
+# Конструктор правил IF/THEN, корпоративные формулировки, история версий
+# ==============================================================================
 print("\n[6/7] Сборка экрана 06_Corporate_Playbook_Light (Корпоративный Playbook)...")
-f6 = cmd("frame.create", {"name": "06_Corporate_Playbook_Light", "x": 1500, "y": 1040, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+f6 = cmd("frame.create", {
+    "parent": p3_id, "name": "06_Corporate_Playbook_Light", "x": 1500, "y": 1040, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f6_id = f6["id"]
-make_app_navbar(f6_id, "Корпоративный Playbook")
+make_app_navbar(f6_id, "Корпоративный Playbook", "Ольга Николаева", "Руководитель")
 
-body6 = cmd("frame.create", {"parent": f6_id, "name": "PlaybookBody", "x": 36, "y": 88, "width": 1368, "height": 840, "props": {"fills": [], "layout": "vertical", "gap": 16, "sizingH": "fixed"}})
+body6 = cmd("frame.create", {"parent": f6_id, "name": "PlaybookBody", "x": 36, "y": 84, "width": 1368, "height": 870, "props": {"fills": [], "layout": "vertical", "gap": 14}})
 
-# Playbook Header with Actions (Width 440px for buttons)
-p_hdr = cmd("frame.create", {"parent": body6["id"], "width": 1368, "height": 45, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_text(p_hdr["id"], "Корпоративный Playbook: Правила и пороги проверки (ООО «ТехноСнаб»)", font_size=18, font_style="Bold", fill=tokens["light/text-main"], width=800)
-# p_hdr_r: width 460, height 40
-p_hdr_r = cmd("frame.create", {"parent": p_hdr["id"], "width": 460, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 12, "crossAlign": "center"}})
-make_btn(p_hdr_r["id"], "+ Создать новое правило", "primary", "light", "sm", width=195)
-make_btn(p_hdr_r["id"], "Импорт из типового шаблона", "secondary", "light", "sm", width=225)
+# Playbook Header with Actions
+p_hdr = cmd("frame.create", {"parent": body6["id"], "width": 1368, "height": 45, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(p_hdr["id"], "Корпоративный Playbook (ООО «ТехноСнаб»)", font_size=20, font_style="Bold", fill=tokens["light/text-main"], width=520)
+p_hdr_r = cmd("frame.create", {"parent": p_hdr["id"], "width": 720, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "gap": 14, "crossAlign": "center"}})
+make_badge(p_hdr_r["id"], "Редакция 3.2 (Ольга Н.)", "primary", size="regular")
+make_btn(p_hdr_r["id"], "+ Создать новое правило", "primary", "light", "sm", width=200)
+make_btn(p_hdr_r["id"], "Импорт из шаблона", "secondary", "light", "sm", width=170)
 
 # Playbook Info Callout
 p_callout = cmd("frame.create", {
-    "parent": body6["id"], "width": 1368, "height": 68,
+    "parent": body6["id"], "width": 1368, "height": 55,
     "props": {
-        "fill": tokens["light/brand-tint"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 1,
-        "strokeLeftWeight": 4, "cornerRadius": 8, "layout": "vertical", "padding": [12, 18, 12, 18], "gap": 3, "sizingH": "fill"
+        "fill": tokens["light/crit-bg"], "stroke": tokens["light/crit-bdr"], "strokeWeight": 1,
+        "cornerRadius": 8, "layout": "horizontal", "padding": [0, 20, 0, 20], "crossAlign": "center", "gap": 12
     }
 })
-make_text(p_callout["id"], "📌 Как Playbook управляет ИИ-анализом:", font_size=13, font_style="Bold", fill=tokens["brand/primary"], width=1330)
-make_text(p_callout["id"], "Любое отклонение входящего договора от утвержденных ниже порогов автоматически помечается как критический риск или предупреждение. ИИ автоматически предлагает корпоративную формулировку компании.", font_size=12, fill=tokens["light/text-sec"], width=1330)
+make_text(p_callout["id"], "📌 Как Playbook управляет анализом ИИ:", font_size=12, font_style="Bold", fill=tokens["brand/primary"], width=280)
+make_text(p_callout["id"], "Любое отклонение условий входящего договора от утвержденных лимитов помечается как риск, и ИИ мгновенно предлагает корпоративную формулировку для протокола разногласий.", font_size=11, fill=tokens["light/text-sec"], width=1020)
 
-# Rules Cards List (Archetype 2/3/4 hybrids)
-rules_container = cmd("frame.create", {"parent": body6["id"], "width": 1368, "height": 690, "props": {"fills": [], "layout": "vertical", "gap": 12, "sizingH": "fill"}})
-
-rules_data = [
-    ("RULE-01", "Ограничение размера неустойки за просрочку поставки", "Финансовая ответственность", "Пеня не более 0.1% в день, совокупный предел ответственности (Cap) строго не более 10% от суммы договора.", "«...не более 0.1% за каждый рабочий день просрочки, но не более 10% от общей суммы договора»", True, "critical", tokens["light/crit-txt"]),
-    ("RULE-02", "Синхронизация сроков оплаты и исключение внутренних коллизий", "Логические противоречия", "Единый срок оплаты: не менее 15 банковских дней с момента подписания Акта приема-передачи (исключить оплату от счета).", "«...в течение 15 банковских дней с момента подписания Сторонами Акта сдачи-приемки»", True, "contradiction", tokens["light/contra-txt"]),
-    ("RULE-03", "Территориальная подсудность споров", "Судебные риски", "Все споры подлежат рассмотрению исключительно в Арбитражном суде по месту нахождения Покупателя (г. Москва).", "«...в Арбитражном суде г. Москвы в соответствии с законодательством РФ»", True, "critical", tokens["light/crit-txt"]),
-    ("RULE-04", "Обязательный досудебный претензионный порядок", "Регламент споров", "Срок рассмотрения претензии контрагентом должен составлять не более 15 календарных дней.", "«...претензия рассматривается Стороной в течение 15 календарных дней с момента получения»", True, "warning", tokens["light/warn-txt"]),
-    ("RULE-05", "Запрет на одностороннее расторжение без компенсации", "Расторжение договора", "Контрагент не имеет права расторгнуть контракт во внесудебном порядке без возмещения документально подтвержденных убытков.", "«...расторжение допускается только по взаимному соглашению либо решению суда»", False, "warning", tokens["light/text-muted"])
+# 5 Visual Rule Cards with IF / THEN logic
+rules = [
+    ("RULE-01", "Ограничение размера неустойки за просрочку поставки", "Финансовая ответственность", "Критический",
+     "ЕСЛИ (IF): Ставка неустойки > 0.1%/день ИЛИ совокупный предел ответственности (Cap) отсутствует либо > 10% от суммы договора.",
+     "ТОГДА (THEN): Пометить как критический риск (ст. 333 ГК РФ) и заменить на корпоративный стандарт.",
+     "Безопасная формулировка ИИ: «...не более 0.1% за каждый рабочий день просрочки, но не более 10% от общей суммы договора»", True),
+    
+    ("RULE-02", "Синхронизация сроков оплаты и исключение внутренних коллизий", "Логические противоречия", "Коллизия",
+     "ЕСЛИ (IF): Требование оплаты выставленного счета до даты подписания Акта сдачи-приемки оборудования.",
+     "ТОГДА (THEN): Зафиксировать логическую коллизию между разделами и исключить предоплату без Акта.",
+     "Безопасная формулировка ИИ: «...в течение 15 банковских дней с момента подписания Сторонами Акта сдачи-приемки»", True),
+    
+    ("RULE-03", "Территориальная подсудность судебных споров", "Судебные риски", "Критический",
+     "ЕСЛИ (IF): Подсудность споров установлена по месту нахождения Поставщика (вне г. Москвы).",
+     "ТОГДА (THEN): Заменить на рассмотрение споров исключительно в Арбитражном суде г. Москвы.",
+     "Безопасная формулировка ИИ: «...в Арбитражном суде г. Москвы в соответствии с законодательством РФ»", True),
+    
+    ("RULE-04", "Обязательный досудебный претензионный порядок", "Регламент споров", "Предупреждение",
+     "ЕСЛИ (IF): Срок рассмотрения претензии > 15 календарных дней либо условие вовсе не урегулировано.",
+     "ТОГДА (THEN): Установить обязательный 15-дневный срок ответа на претензию до обращения в суд.",
+     "Безопасная формулировка ИИ: «...претензия рассматривается Стороной в течение 15 календарных дней с момента получения»", True),
+    
+    ("RULE-05", "Запрет на одностороннее расторжение без компенсации убытков", "Расторжение договора", "Предупреждение",
+     "ЕСЛИ (IF): Контрагент имеет право расторгнуть контракт во внесудебном порядке без возмещения расходов.",
+     "ТОГДА (THEN): Запретить немотивированный односторонний отказ контрагента.",
+     "Безопасная формулировка ИИ: «...расторжение допускается только по взаимному соглашению либо решению суда»", False)
 ]
 
-for rid, rname, rcat, rcond, rsafe, ris_active, rbadge_type, rstripe_clr in rules_data:
-    rcard = cmd("frame.create", {
-        "parent": rules_container["id"], "name": f"Rule_{rid}", "width": 1368, "height": 118,
+for r_id, r_title, r_cat, r_sev, r_if, r_then, r_safe, is_on in rules:
+    rc = cmd("frame.create", {
+        "parent": body6["id"], "width": 1368, "height": 135,
         "props": {
             "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-            "strokeLeftWeight": 4, "cornerRadius": 10, "layout": "horizontal", "padding": 16, "gap": 16, "crossAlign": "center", "sizingH": "fill"
+            "cornerRadius": 10, "layout": "horizontal", "padding": [12, 20, 12, 20], "crossAlign": "center", "gap": 20
         }
     })
+    # Toggle switch
+    tog = cmd("frame.create", {"parent": rc["id"], "width": 55, "height": 50, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "gap": 4}})
+    t_track = cmd("frame.create", {"parent": tog["id"], "width": 42, "height": 22, "props": {"fill": tokens["brand/primary"] if is_on else tokens["light/border"], "cornerRadius": 11, "layout": "horizontal", "padding": [2, 2, 2, 2], "mainAlign": "max" if is_on else "min"}})
+    cmd("frame.create", {"parent": t_track["id"], "width": 18, "height": 18, "props": {"fill": "#FFFFFF", "cornerRadius": 9}})
+    make_text(tog["id"], "ВКЛ" if is_on else "ВЫКЛ", font_size=10, font_style="Bold", fill=tokens["brand/primary"] if is_on else tokens["light/text-muted"])
     
-    # Left Status Toggle
-    t_col = cmd("frame.create", {"parent": rcard["id"], "width": 50, "height": 80, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "gap": 6}})
-    tog_bg = cmd("frame.create", {
-        "parent": t_col["id"], "width": 40, "height": 22,
-        "props": {
-            "fill": tokens["brand/primary"] if ris_active else tokens["light/card-subtle"],
-            "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 11,
-            "layout": "horizontal", "padding": 2, "mainAlign": "max" if ris_active else "min"
-        }
-    })
-    cmd("frame.create", {"parent": tog_bg["id"], "width": 18, "height": 18, "props": {"fill": "#FFFFFF", "cornerRadius": 9}})
-    make_text(t_col["id"], "ВКЛ" if ris_active else "ВЫКЛ", font_size=10, font_style="Bold", fill=tokens["brand/primary"] if ris_active else tokens["light/text-muted"])
-
-    # Middle Content with clean wrapping (width 1080px)
-    m_col = cmd("frame.create", {"parent": rcard["id"], "width": 1080, "height": 88, "props": {"fills": [], "layout": "vertical", "gap": 4, "sizingH": "fill"}})
-    m_top = cmd("frame.create", {"parent": m_col["id"], "width": 1080, "height": 24, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
-    make_text(m_top["id"], rid, font_size=12, font_style="Bold", fill=tokens["light/text-muted"], width=65)
-    make_text(m_top["id"], rname, font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=560)
-    make_badge(m_top["id"], rcat, "primary", "light", "compact")
-    make_badge(m_top["id"], "Критический" if rbadge_type == "critical" else ("Коллизия" if rbadge_type == "contradiction" else "Предупреждение"), rbadge_type, "light", "compact")
-
-    make_text(m_col["id"], f"Условие правила: {rcond}", font_size=12, fill=tokens["light/text-sec"], width=1060)
-    make_text(m_col["id"], f"Безопасная формулировка ИИ: {rsafe}", font_size=12, font_style="Bold", fill=tokens["brand/primary"], width=1060)
-
-    # Right Action (width 150px)
-    r_act = cmd("frame.create", {"parent": rcard["id"], "width": 150, "height": 80, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "crossAlign": "center", "gap": 8}})
-    make_btn(r_act["id"], "Редактировать", "secondary", "light", "sm", width=135)
+    # Rule Content
+    r_body = cmd("frame.create", {"parent": rc["id"], "width": 1100, "height": 110, "props": {"fills": [], "layout": "vertical", "gap": 4}})
+    
+    # Header row
+    rhdr = cmd("frame.create", {"parent": r_body["id"], "width": 1100, "height": 22, "props": {"fills": [], "layout": "horizontal", "gap": 12, "crossAlign": "center"}})
+    make_text(rhdr["id"], r_id, font_size=12, font_style="Bold", fill=tokens["light/text-muted"], width=65)
+    make_text(rhdr["id"], r_title, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=520)
+    make_badge(rhdr["id"], r_cat, "primary", size="compact")
+    sev_type = "critical" if r_sev == "Критический" else ("contradiction" if r_sev == "Коллизия" else "warning")
+    make_badge(rhdr["id"], r_sev, sev_type, size="compact")
+    
+    # IF / THEN Logic lines
+    make_text(r_body["id"], r_if, font_size=11, fill=tokens["light/text-sec"], width=1100)
+    make_text(r_body["id"], r_then, font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=1100)
+    make_text(r_body["id"], r_safe, font_size=11, font_style="Bold", fill=tokens["brand/primary"], width=1100)
+    
+    # Edit Action
+    r_act = cmd("frame.create", {"parent": rc["id"], "width": 130, "height": 40, "props": {"fills": [], "layout": "horizontal", "mainAlign": "max", "crossAlign": "center"}})
+    make_btn(r_act["id"], "Настроить", "secondary", "light", "sm", width=120)
 
 
-# =============================================================================
+# ==============================================================================
 # SCREEN 7: 07_Team_Settings_Light (x=3000, y=1040)
-# =============================================================================
-print("\n[7/7] Сборка экрана 07_Team_Settings_Light (Команда и настройки)...")
-f7 = cmd("frame.create", {"name": "07_Team_Settings_Light", "x": 3000, "y": 1040, "width": 1440, "height": 960, "props": {"fill": tokens["light/bg"], "cornerRadius": 16, "clip": True}})
+# Центр управления: 3 профиля (Алексей, Ольга, Дмитрий), интеграции СЭД и 152-ФЗ
+# ==============================================================================
+print("\n[7/7] Сборка экрана 07_Team_Settings_Light (Команда, Профили и Интеграции)...")
+f7 = cmd("frame.create", {
+    "parent": p3_id, "name": "07_Team_Settings_Light", "x": 3000, "y": 1040, "width": 1440, "height": 980,
+    "props": {"fill": tokens["light/bg"], "clip": True}
+})
 f7_id = f7["id"]
-make_app_navbar(f7_id, "Команда")
+make_app_navbar(f7_id, "Команда", "Алексей Смирнов", "Юрист")
 
-body7 = cmd("frame.create", {"parent": f7_id, "name": "ProfileBody", "x": 36, "y": 88, "width": 1368, "height": 840, "props": {"fills": [], "layout": "horizontal", "gap": 24, "sizingH": "fixed"}})
+body7 = cmd("frame.create", {"parent": f7_id, "name": "TeamBody", "x": 36, "y": 84, "width": 1368, "height": 870, "props": {"fills": [], "layout": "horizontal", "gap": 24}})
 
-# Left Profile & Subscription Column (420px)
-left_p = cmd("frame.create", {
-    "parent": body7["id"], "width": 420, "height": 830,
+# LEFT SIDEBAR: Current Profile, Persona Switcher & Notifications (Width 400)
+sb_left = cmd("frame.create", {
+    "parent": body7["id"], "width": 400, "height": 870,
     "props": {
         "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 28, "gap": 18, "sizingH": "fixed"
+        "cornerRadius": 10, "layout": "vertical", "padding": [24, 24, 24, 24], "gap": 16
     }
 })
 
-av_big = cmd("frame.create", {"parent": left_p["id"], "width": 76, "height": 76, "props": {"fill": tokens["light/brand-tint"], "stroke": tokens["light/brand-bdr"], "strokeWeight": 2, "cornerRadius": 38, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-make_text(av_big["id"], "АС", font_size=26, font_style="Bold", fill=tokens["brand/primary"])
+# Big Avatar & Info
+av_card = cmd("frame.create", {"parent": sb_left["id"], "width": 352, "height": 80, "props": {"fills": [], "layout": "horizontal", "gap": 16, "crossAlign": "center"}})
+av_big = cmd("frame.create", {"parent": av_card["id"], "width": 64, "height": 64, "props": {"fill": tokens["brand/primary-light"], "stroke": tokens["brand/primary"], "strokeWeight": 2, "cornerRadius": 32, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": av_big["id"], "text": "АС", "props": {"fontSize": 20, "fontStyle": "Bold", "fill": tokens["brand/primary"]}})
 
-make_text(left_p["id"], "Алексей Смирнов", font_size=20, font_style="Bold", fill=tokens["light/text-main"], width=364)
-make_text(left_p["id"], "Ведущий юрисконсульт • ООО «ТехноСнаб»", font_size=13, fill=tokens["light/text-sec"], width=364)
-make_badge(left_p["id"], "Роль: Проверяющий юрист (Editor)", "primary", "light", "regular")
+av_info = cmd("frame.create", {"parent": av_card["id"], "width": 260, "height": 60, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
+make_text(av_info["id"], "Алексей Смирнов", font_size=18, font_style="Bold", fill=tokens["light/text-main"])
+make_text(av_info["id"], "Ведущий юрисконсульт • ООО «ТехноСнаб»", font_size=11, fill=tokens["light/text-sec"])
+make_badge(av_info["id"], "Editor • Проверяющий юрист", "primary", size="compact")
 
-cmd("frame.create", {"parent": left_p["id"], "width": 364, "height": 1, "props": {"fill": tokens["light/border"]}})
+# Persona switcher on profile
+make_text(sb_left["id"], "Переключить активный портрет (Тест интерфейса):", font_size=11, font_style="Bold", fill=tokens["light/text-muted"])
+p_sw = cmd("frame.create", {"parent": sb_left["id"], "width": 352, "height": 34, "props": {"fill": tokens["light/card-tint"], "cornerRadius": 6, "layout": "horizontal", "padding": [2, 2, 2, 2], "gap": 2}})
+ps_1 = cmd("frame.create", {"parent": p_sw["id"], "width": 115, "height": 30, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": ps_1["id"], "text": "Алексей (Юрист)", "props": {"fontSize": 10, "fontStyle": "Bold", "fill": "#FFFFFF"}})
+ps_2 = cmd("frame.create", {"parent": p_sw["id"], "width": 115, "height": 30, "props": {"fills": [], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": ps_2["id"], "text": "Ольга (Руков.)", "props": {"fontSize": 10, "fill": tokens["light/text-sec"]}})
+ps_3 = cmd("frame.create", {"parent": p_sw["id"], "width": 115, "height": 30, "props": {"fills": [], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
+cmd("node.create", {"type": "text", "parent": ps_3["id"], "text": "Дмитрий (Дир.)", "props": {"fontSize": 10, "fill": tokens["light/text-sec"]}})
 
-# Subscription Card
-sub_box = cmd("frame.create", {
-    "parent": left_p["id"], "width": 364, "height": 170,
+# Subscription quota widget
+sub_w = cmd("frame.create", {
+    "parent": sb_left["id"], "width": 352, "height": 130,
     "props": {
-        "fill": tokens["light/card-subtle"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 10, "layout": "vertical", "padding": 16, "gap": 10
+        "fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 8, "layout": "vertical", "padding": [14, 16, 14, 16], "gap": 8
     }
 })
-make_text(sub_box["id"], "Тариф: Корпоративный SaaS", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=332)
-make_text(sub_box["id"], "Использовано проверок: 148 из 500 в текущем месяце", font_size=12, fill=tokens["light/text-sec"], width=332)
-sbar_bg = cmd("frame.create", {"parent": sub_box["id"], "width": 332, "height": 8, "props": {"fill": tokens["light/border"], "cornerRadius": 4}})
-sbar_f = cmd("frame.create", {"parent": sbar_bg["id"], "width": int(332 * 148 / 500), "height": 8, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4}})
-if "brand/primary" in var_ids: bind(sbar_f["id"], "fill", "brand/primary")
+make_text(sub_w["id"], "Тариф: Корпоративный SaaS (On-Premise)", font_size=12, font_style="Bold", fill=tokens["light/text-main"])
+make_text(sub_w["id"], "Использовано проверок: 148 из 500 в этом месяце", font_size=11, fill=tokens["light/text-sec"])
+# Progress
+s_tr = cmd("frame.create", {"parent": sub_w["id"], "width": 320, "height": 6, "props": {"fill": tokens["light/border"], "cornerRadius": 3}})
+cmd("frame.create", {"parent": s_tr["id"], "width": 95, "height": 6, "props": {"fill": tokens["brand/primary"], "cornerRadius": 3}})
+make_text(sub_w["id"], "Действует до 31 декабря 2026 г. • 5 юристов в штате", font_size=10, fill=tokens["light/text-muted"])
+make_btn(sub_w["id"], "Управление корпоративной подпиской", "secondary", "light", "xs", width=320)
 
-make_text(sub_box["id"], "Действует до 31 декабря 2026 г. • 5 рабочих мест юристов", font_size=11, fill=tokens["light/text-muted"], width=332)
-make_btn(sub_box["id"], "Управление подпиской", "secondary", "light", "sm", width=332)
-
-# Notifications Checkboxes
-make_text(left_p["id"], "Уведомления и алерты:", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=364)
-for n_txt in ["Email-уведомление сразу по готовности отчета", "SMS при обнаружении критического риска (>90%)", "Еженедельный сводный дайджест для руководства"]:
-    nrow = cmd("frame.create", {"parent": left_p["id"], "width": 364, "height": 24, "props": {"fills": [], "layout": "horizontal", "gap": 10, "crossAlign": "center"}})
-    chk = cmd("frame.create", {"parent": nrow["id"], "width": 18, "height": 18, "props": {"fill": tokens["brand/primary"], "cornerRadius": 4, "layout": "horizontal", "mainAlign": "center", "crossAlign": "center"}})
-    cmd("node.create", {"type": "text", "parent": chk["id"], "text": "✓", "props": {"fontSize": 11, "fontStyle": "Bold", "fill": "#FFFFFF"}})
-    make_text(nrow["id"], n_txt, font_size=11, fill=tokens["light/text-sec"], width=330)
-
-# Right Team & Access Control Column (924px)
-right_p = cmd("frame.create", {
-    "parent": body7["id"], "width": 924, "height": 830,
-    "props": {
-        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 12, "layout": "vertical", "padding": 28, "gap": 18, "sizingH": "fill"
-    }
-})
-
-tp_hdr = cmd("frame.create", {"parent": right_p["id"], "width": 868, "height": 38, "props": {"fills": [], "layout": "horizontal", "mainAlign": "spaceBetween", "crossAlign": "center", "sizingH": "fill"}})
-make_text(tp_hdr["id"], "Управление доступом команды (Портреты пользователей)", font_size=16, font_style="Bold", fill=tokens["light/text-main"], width=620)
-make_btn(tp_hdr["id"], "+ Пригласить юриста", "primary", "light", "sm", width=180)
-
-# Team Table
-t_team = cmd("frame.create", {"parent": right_p["id"], "width": 868, "height": 310, "props": {"fills": [], "layout": "vertical", "gap": 8, "sizingH": "fill"}})
-t_th7 = cmd("frame.create", {"parent": t_team["id"], "width": 868, "height": 32, "props": {"fill": tokens["light/card-subtle"], "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center"}})
-for tt_t, tt_w in [("Сотрудник", 260), ("Портрет из отчета", 180), ("Роль в системе", 180), ("Статус доступа", 140), ("Действие", 100)]:
-    make_text(t_th7["id"], tt_t, font_size=12, font_style="Bold", fill=tokens["light/text-sec"], width=tt_w)
-
-team_members = [
-    ("Алексей Смирнов", "alexey.smirnov@technosnab.ru", "Алексей (50% ЦА) — практикующий юрист", "Editor / Аналитик", "Активен сейчас", "primary"),
-    ("Ольга Николаева", "olga.nikolaeva@technosnab.ru", "Ольга (25% ЦА) — руководитель отдела", "Admin / Playbook Lead", "Активен", "secondary"),
-    ("Дмитрий Ковалев", "dmitry.kovalev@technosnab.ru", "Дмитрий (25% ЦА) — закупки / директор", "Viewer / Executive", "Активен", "secondary"),
-    ("Елена Васильева", "elena.vasilieva@technosnab.ru", "Юрисконсульт по недвижимости", "Editor / Аналитик", "Активен", "secondary")
+# Notification Channels & Periods (From Story Map)
+make_text(sb_left["id"], "Настройка каналов и частоты уведомлений:", font_size=12, font_style="Bold", fill=tokens["light/text-main"])
+notifs = [
+    ("Email: alexey.smirnov@technosnab.ru (мгновенно)", True),
+    ("Telegram-бот @LexAI_Legal_Bot (при рисках > 80)", True),
+    ("SMS-алерт при судебных коллизиях", False),
+    ("Еженедельный дайджест для руководства (пн, 09:00)", True)
 ]
+for n_txt, n_chk in notifs:
+    nrow = cmd("frame.create", {"parent": sb_left["id"], "width": 352, "height": 24, "props": {"fills": [], "layout": "horizontal", "gap": 8, "crossAlign": "center"}})
+    make_badge(nrow["id"], "✓ ВКЛ" if n_chk else "ВЫКЛ", "safe" if n_chk else "warning", size="compact")
+    make_text(nrow["id"], n_txt, font_size=11, fill=tokens["light/text-main"])
 
-for m_name, m_email, m_persona, m_role, m_status, m_btn in team_members:
-    tm_row = cmd("frame.create", {"parent": t_team["id"], "width": 868, "height": 55, "props": {"fills": [], "stroke": tokens["light/border"], "strokeBottomWeight": 1, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center"}})
-    m_col = cmd("frame.create", {"parent": tm_row["id"], "width": 260, "height": 45, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
-    make_text(m_col["id"], m_name, font_size=13, font_style="Bold", fill=tokens["light/text-main"], width=250)
-    make_text(m_col["id"], m_email, font_size=11, fill=tokens["light/text-muted"], width=250)
-    make_text(tm_row["id"], m_persona, font_size=12, fill=tokens["light/text-sec"], width=180)
-    make_text(tm_row["id"], m_role, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=180)
-    st_box = cmd("frame.create", {"parent": tm_row["id"], "width": 140, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
-    make_badge(st_box["id"], m_status, "safe", "light", "compact")
-    act_box = cmd("frame.create", {"parent": tm_row["id"], "width": 100, "height": 34, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
-    make_btn(act_box["id"], "Права", "secondary", "light", "sm", width=80)
 
-# Security & Audit Log Card (with explicit 660px width for text column)
-sec_box = cmd("frame.create", {
-    "parent": right_p["id"], "width": 868, "height": 260,
+# RIGHT CONTENT: Team Matrix, Integrations Hub & 152-FZ Compliance (Width 944)
+sb_right = cmd("frame.create", {"parent": body7["id"], "width": 944, "height": 870, "props": {"fills": [], "layout": "vertical", "gap": 16}})
+
+# 1. Team Access Table
+team_box = cmd("frame.create", {
+    "parent": sb_right["id"], "width": 944, "height": 290,
     "props": {
-        "fill": tokens["light/card-subtle"], "stroke": tokens["light/border"], "strokeWeight": 1,
-        "cornerRadius": 10, "layout": "vertical", "padding": 18, "gap": 10, "sizingH": "fill"
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "clip": True
     }
 })
-make_text(sec_box["id"], "Безопасность и аудит доступа (Соответствие 152-ФЗ):", font_size=14, font_style="Bold", fill=tokens["light/text-main"], width=832)
+tb_hdr = cmd("frame.create", {"parent": team_box["id"], "width": 944, "height": 45, "props": {"fill": tokens["light/card-tint"], "stroke": tokens["light/border"], "strokeWeight": 1, "layout": "horizontal", "padding": [0, 20, 0, 20], "mainAlign": "spaceBetween", "crossAlign": "center"}})
+make_text(tb_hdr["id"], "Управление доступом команды (Портреты пользователей)", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
+make_btn(tb_hdr["id"], "+ Пригласить юриста", "primary", "light", "xs", width=160)
+
+# Table column names
+th_row = cmd("frame.create", {"parent": team_box["id"], "width": 944, "height": 32, "props": {"fills": [], "stroke": tokens["light/border-subtle"], "strokeWeight": 1, "layout": "horizontal", "padding": [0, 20, 0, 20], "crossAlign": "center"}})
+make_text(th_row["id"], "Сотрудник", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=220)
+make_text(th_row["id"], "Портрет из отчета", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=200)
+make_text(th_row["id"], "Роль в системе", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=170)
+make_text(th_row["id"], "Статус", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=140)
+make_text(th_row["id"], "Действие", font_size=11, font_style="Bold", fill=tokens["light/text-sec"], width=130)
+
+members = [
+    ("Алексей Смирнов", "alexey.smirnov@technosnab.ru", "Алексей (50%) — юрист", "Editor / Аналитик", "safe", "Активен сейчас"),
+    ("Ольга Николаева", "olga.nikolaeva@technosnab.ru", "Ольга (25%) — рук. отдела", "Admin / Playbook Lead", "safe", "Активен"),
+    ("Дмитрий Ковалев", "dmitry.kovalev@technosnab.ru", "Дмитрий (25%) — закупки", "Viewer / Executive", "safe", "Активен"),
+    ("Елена Васильева", "elena.vasilieva@technosnab.ru", "Юрисконсульт по аренде", "Editor / Аналитик", "safe", "Активен")
+]
+for m_name, m_mail, m_poa, m_role, m_st_t, m_st in members:
+    mrow = cmd("frame.create", {"parent": team_box["id"], "width": 944, "height": 50, "props": {"fills": [], "stroke": tokens["light/border-subtle"], "strokeWeight": 1, "layout": "horizontal", "padding": [0, 20, 0, 20], "crossAlign": "center"}})
+    m_info = cmd("frame.create", {"parent": mrow["id"], "width": 220, "height": 36, "props": {"fills": [], "layout": "vertical", "mainAlign": "center"}})
+    make_text(m_info["id"], m_name, font_size=11, font_style="Bold", fill=tokens["light/text-main"])
+    make_text(m_info["id"], m_mail, font_size=10, fill=tokens["light/text-muted"])
+    
+    make_text(mrow["id"], m_poa, font_size=11, fill=tokens["light/text-sec"], width=200)
+    make_text(mrow["id"], m_role, font_size=11, font_style="Bold", fill=tokens["light/text-main"], width=170)
+    
+    st_b = cmd("frame.create", {"parent": mrow["id"], "width": 140, "height": 30, "props": {"fills": [], "layout": "horizontal", "crossAlign": "center"}})
+    make_badge(st_b["id"], m_st, m_st_t, size="compact")
+    
+    make_btn(mrow["id"], "Права доступа", "secondary", "light", "xs", width=110)
+
+# 2. Corporate Integrations Hub (СЭД, Диадок, 1С, СПАРК)
+int_card = cmd("frame.create", {
+    "parent": sb_right["id"], "width": 944, "height": 260,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [16, 20, 16, 20], "gap": 10
+    }
+})
+make_text(int_card["id"], "Интеграции с корпоративными СЭД и юридическими базами:", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
+
+integrations = [
+    ("1С:Документооборот 3.0", "Автоматическая выгрузка договоров на проверку прямо из карточки документа", "safe", "Подключено"),
+    ("Диадок (Контур.СЭД)", "Прямой импорт входящих пакетов документов от внешних контрагентов", "safe", "Подключено"),
+    ("СПАРК / Мой Арбитр", "Подгрузка индексов благонадежности, банкротства и судебных споров", "safe", "Подключено"),
+    ("GigaChat Enterprise On-Premise", "Шлюз локальной нейросети, развернутый внутри закрытого контура 152-ФЗ", "primary", "Активен")
+]
+for iname, idesc, itype, istatus in integrations:
+    irow = cmd("frame.create", {"parent": int_card["id"], "width": 904, "height": 45, "props": {"fill": tokens["light/card-tint"], "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "mainAlign": "spaceBetween", "crossAlign": "center"}})
+    i_left = cmd("frame.create", {"parent": irow["id"], "width": 700, "height": 36, "props": {"fills": [], "layout": "vertical", "mainAlign": "center"}})
+    make_text(i_left["id"], iname, font_size=11, font_style="Bold", fill=tokens["light/text-main"])
+    make_text(i_left["id"], idesc, font_size=10, fill=tokens["light/text-sec"])
+    make_badge(irow["id"], istatus, itype, size="compact")
+
+# 3. Security & 152-FZ Compliance Card
+sec_card = cmd("frame.create", {
+    "parent": sb_right["id"], "width": 944, "height": 260,
+    "props": {
+        "fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1,
+        "cornerRadius": 10, "layout": "vertical", "padding": [16, 20, 16, 20], "gap": 8
+    }
+})
+make_text(sec_card["id"], "Безопасность, шифрование и аудит доступа (152-ФЗ):", font_size=13, font_style="Bold", fill=tokens["light/text-main"])
 
 sec_items = [
-    ("Изолированный контур обработки", "Договоры обрабатываются в изолированной среде без сохранения в публичные облака.", "ВКЛЮЧЕНО"),
-    ("Журнал действий пользователей (Audit Log)", "Фиксируются все загрузки, скачивания и принятые формулировки.", "ВЕДЕТСЯ"),
-    ("Двухфакторная аутентификация (2FA)", "Обязательна для всех сотрудников юридического департамента.", "АКТИВНА")
+    ("Изолированный контур обработки (On-Premise):", "Договоры обрабатываются в изолированной среде без сохранения в публичные облака и без обучения моделей на данных контрактов.", "ВКЛЮЧЕНО"),
+    ("Журнал действий пользователей (Audit Log):", "Фиксируются все загрузки, скачивания, просмотры и принятые формулировки протоколов разногласий.", "ВЕДЕТСЯ"),
+    ("Двухфакторная аутентификация (2FA & ГОСТ-шифрование):", "Обязательна для всех сотрудников юридического департамента и руководства.", "АКТИВНА")
 ]
-for st, sd, ss in sec_items:
-    srow = cmd("frame.create", {"parent": sec_box["id"], "width": 832, "height": 48, "props": {"fill": tokens["light/card"], "stroke": tokens["light/border"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "crossAlign": "center", "mainAlign": "spaceBetween"}})
-    # sc_col: width 660, height 40
-    sc_col = cmd("frame.create", {"parent": srow["id"], "width": 660, "height": 40, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
-    make_text(sc_col["id"], st, font_size=12, font_style="Bold", fill=tokens["light/text-main"], width=650)
-    make_text(sc_col["id"], sd, font_size=11, fill=tokens["light/text-sec"], width=650)
-    make_badge(srow["id"], ss, "safe", "light", "compact")
+for stitle, sdesc, sbadge in sec_items:
+    sc = cmd("frame.create", {"parent": sec_card["id"], "width": 904, "height": 55, "props": {"fill": tokens["light/safe-bg"], "stroke": tokens["light/safe-bdr"], "strokeWeight": 1, "cornerRadius": 6, "layout": "horizontal", "padding": [0, 16, 0, 16], "mainAlign": "spaceBetween", "crossAlign": "center"}})
+    sc_col = cmd("frame.create", {"parent": sc["id"], "width": 740, "height": 40, "props": {"fills": [], "layout": "vertical", "mainAlign": "center", "gap": 2}})
+    make_text(sc_col["id"], stitle, font_size=11, font_style="Bold", fill=tokens["light/safe-txt"])
+    make_text(sc_col["id"], sdesc, font_size=10, fill=tokens["light/text-sec"])
+    make_badge(sc["id"], sbadge, "safe", size="compact")
 
 
-# =============================================================================
-# SAVE DIRECTLY IN OPEN FIGCRAFT
-# =============================================================================
+# ==============================================================================
+# SAVE & EXPORT
+# ==============================================================================
 print("\n💾 Сохранение изменений в открытом проекте...")
-save_res = cmd("file.save", {})
-print("  Результат сохранения:", save_res)
+res_save = cmd("file.save", {})
+print(f"  Результат сохранения: {res_save}")
 
-# =============================================================================
-# EXPORT HIGH-RES PNG RENDERS
-# =============================================================================
 print("\n📸 Экспорт обновленных PNG рендеров всех 7 экранов...")
-exports = [
+render_targets = [
     ("screen_01_onboarding_light.png", f1_id),
     ("screen_02_dashboard_light.png", f2_id),
     ("screen_03_processing_light.png", f3_id),
     ("screen_04_analysis_light.png", f4_id),
     ("screen_05_analytics_light.png", f5_id),
     ("screen_06_playbook_light.png", f6_id),
-    ("screen_07_team_light.png", f7_id)
+    ("screen_07_team_light.png", f7_id),
 ]
-for fn, fid in exports:
-    p = os.path.join(EXPORT_DIR, fn)
-    cmd("file.export", {"ids": [fid], "format": "png", "scale": 2, "path": p})
-    print(f"  ✓ Экспортирован: {fn}")
+
+for fname, fid in render_targets:
+    out_p = os.path.join(EXPORT_DIR, fname)
+    cmd("file.export", {"ids": [fid], "format": "png", "scale": 2, "path": out_p})
+    print(f"  ✓ Экспортирован: {fname}")
 
 s.close()
-print("\n✨ ВСЕ 7 ЭКРАНОВ ПРОТОТИПА В СВЕТЛОЙ ТЕМЕ УСПЕШНО СОЗДАНЫ И ЭКСПОРТИРОВАНЫ!")
+print("\n✨ ВСЕ 7 ЭКРАНОВ РАСШИРЕННОГО ПРОТОТИПА УСПЕШНО СОЗДАНЫ И ЭКСПОРТИРОВАНЫ!")
