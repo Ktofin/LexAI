@@ -1,0 +1,18 @@
+# Отчёты и документы (только локально)
+*.docx
+*.pdf
+
+# Python скрипты сборки
+*.py
+__pycache__/
+
+# Промежуточные логи и артефакты
+khaerdinov_images/
+docx_full_extracted.txt
+github_backlog.csv
+github_backlog.json
+GITHUB_PROJECT.md
+GITHUB_PROJECT_FEDOROV.md
+renders/
+.agents/
+.DS_Store
