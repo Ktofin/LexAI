@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Скрипт динамической смены дизайн-системы и цвета кнопок в FigCraft.
+Скрипт динамической смены дизайн-системы и цвета кнопок в FigCraft (Anthropic Dark).
 Использование:
-    python3 update_theme.py "#7C3AED"   # Сменить основной цвет на фиолетовый
-    python3 update_theme.py "#10B981"   # Сменить основной цвет на изумрудный
-    python3 update_theme.py "#DC2626"   # Сменить основной цвет на рубиновый
+    python3 update_theme.py "#D97757"   # Фирменный терракотовый Anthropic (по умолчанию)
+    python3 update_theme.py "#E05D5D"   # Рубиновый / Crimson
+    python3 update_theme.py "#9D94E8"   # Аметистовый / Amethyst
+    python3 update_theme.py "#52A874"   # Изумрудный / Forest Sage
+    python3 update_theme.py "#E5A93C"   # Теплый янтарь / Ochre
 """
 
 import socket
@@ -14,14 +16,14 @@ import json
 import os
 import sys
 
-PORT = 9888
+PORT = 9897
 FIGCRAFT_BIN = "/Applications/FigCraft.app/Contents/MacOS/FigCraft"
 WORKSPACE_DIR = os.path.dirname(os.path.abspath(__file__))
 FILE_PATH = os.path.join(WORKSPACE_DIR, "Legal_AI_Analyst.figcraft")
 EXPORT_DIR = os.path.join(WORKSPACE_DIR, "renders")
 
-new_color = sys.argv[1] if len(sys.argv) > 1 else "#7C3AED"
-print(f"🔄 Смена цвета кнопок и акцента на: {new_color}...")
+new_color = sys.argv[1] if len(sys.argv) > 1 else "#D97757"
+print(f"🔄 Смена основного акцента brand/primary на: {new_color}...")
 
 proc = subprocess.Popen([FIGCRAFT_BIN, "--control", str(PORT), FILE_PATH])
 time.sleep(2.0)
@@ -43,20 +45,17 @@ try:
         res = json.loads(buf.decode("utf-8"))
         return res.get("result")
 
-    # Find the variable brand/primary
-    # We can use variable.set by name or search collections
-    # Let us list collections and variables
-    # Or directly update brand/primary
+    # Update variable brand/primary
     res = cmd("variable.set", {"variable": "brand/primary", "value": new_color})
     print("Результат обновления brand/primary:", res)
 
-    # Save
+    # Save changes
     save_res = cmd("file.save", {})
-    print("Сохранено:", save_res)
+    print("Сохранено в файл:", save_res)
 
-    # Re-export
-    cmd("file.export", {"format": "png", "scale": 2, "path": os.path.join(EXPORT_DIR, "02_dashboard.png")})
-    print("✅ Все экраны и кнопки на макете мгновенно обновились!")
+    # Re-export dashboard preview
+    cmd("file.export", {"format": "png", "scale": 2, "path": os.path.join(EXPORT_DIR, "02_dashboard_dark.png")})
+    print(f"✅ Готово! Все кнопки на всех страницах и экранах мгновенно перекрашены в {new_color}!")
 
 finally:
     proc.terminate()
